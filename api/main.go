@@ -8,9 +8,12 @@ import (
 
 
 func main() {
+	cfg := getConfig()
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/", testResponse).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":7344", router))
+	addr := ":" + cfg.Server.Port
+	log.Fatal(http.ListenAndServe(addr, router))
 }
