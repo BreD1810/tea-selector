@@ -10,7 +10,7 @@ This API interacts with a database, containing information used for the tea sele
 
 To build an executable, run:
 ```
-go build main.go
+go build
 ```
 
 ## Interacting with the API
