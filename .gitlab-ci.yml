@@ -1,8 +1,14 @@
 stages:
-    - build
     - test
+    - build
 
-go_unit_tests:
+cache:
+    paths:
+        - /$GOPATH/src/github.com
+        - /$GOPATH/src/golang.org
+        - /$GOPATH/src/gopkg.in
+
+api_unit_tests:
     stage: test
     image: golang
     before_script:
@@ -13,7 +19,7 @@ go_unit_tests:
     script:
         - go test -v ./api
 
-go_build:
+api_build:
     stage: build
     image: golang
     before_script:
