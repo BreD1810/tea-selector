@@ -21,12 +21,12 @@ func initialiseDatabase(loc string) {
 	db = database
 
 	db.SetMaxOpenConns(1)
-	setupTeaTable()
+	setupTeaTable(db)
 
 	log.Println("Database initialised.")
 }
 
-func setupTeaTable() {
+func setupTeaTable(db *sql.DB) {
 	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS tea (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);")
 	checkError("creating tea table", err)
 
@@ -37,6 +37,6 @@ func setupTeaTable() {
 
 func checkError(s string, e error) {
 	if e != nil {
-		log.Fatal("Error "+s+": %v", e)
+		log.Fatalf("Error "+s+": %v", e)
 	}
 }
