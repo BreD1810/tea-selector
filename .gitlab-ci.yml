@@ -1,0 +1,30 @@
+stages:
+    - build
+    - test
+
+go_unit_tests:
+    stage: test
+    image: golang
+    before_script:
+        - mkdir -p $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds
+        - cp -r $CI_PROJECT_DIR $GOPATH/src/$REPO/$GROUP/$PROJECT
+        - ln -s $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds/$GROUP
+        - go get -v -d ./...
+    script:
+        - go test -v ./api
+
+go_build:
+    stage: build
+    image: golang
+    before_script:
+        - mkdir -p $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds
+        - cp -r $CI_PROJECT_DIR $GOPATH/src/$REPO/$GROUP/$PROJECT
+        - ln -s $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds/$GROUP
+        - go get -v -d ./...
+        - ls
+    script:
+        - cd api
+        - go build -o output
+    artifacts:
+        paths:
+            - api/output
