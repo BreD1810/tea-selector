@@ -15,7 +15,7 @@ api_unit_tests:
         - mkdir -p $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds
         - cp -r $CI_PROJECT_DIR $GOPATH/src/$REPO/$GROUP/$PROJECT
         - ln -s $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds/$GROUP
-        - go get -v -d ./...
+        - go get -v -d -t ./...
     script:
         - go test -v ./api
 
