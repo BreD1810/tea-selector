@@ -6,9 +6,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-
 func main() {
 	cfg := getConfig()
+	initialiseDatabase()
 
 	router := mux.NewRouter().StrictSlash(true)
 
