@@ -30,7 +30,9 @@ api_build:
         - ls
     script:
         - cd api
-        - go build -o output
+        - env GOOS=linux GOARCH=amd64 go build -o output-amd64
+        - env GOOS=linux GOARCH=arm GOARM=7 go build -o output-pi3
     artifacts:
         paths:
-            - api/output
+            - api/output-amd64
+            - api/output-pi3
