@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -10,13 +11,16 @@ type config struct {
 	Server struct {
 		Port string `yaml:"port"`
 	} `yaml:"server"`
+	Database struct {
+		Location string `yaml:"location"`
+	} `yaml:"database"`
 }
 
 func getConfig() config {
 	f, err := os.Open("config.yml")
-	
+
 	if err != nil {
-		log.Fatal("Error opening config.yml")	
+		log.Fatal("Error opening config.yml")
 	}
 	defer f.Close()
 
@@ -33,4 +37,5 @@ func getConfig() config {
 
 func logConfig(cfg config) {
 	log.Printf("Port: %v\n", cfg.Server.Port)
+	log.Printf("Database Location: %v\n", cfg.Database.Location)
 }

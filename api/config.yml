@@ -1,2 +1,5 @@
 server:
     port: 7344
+
+database:
+    location: "tea-store.db"

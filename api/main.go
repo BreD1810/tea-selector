@@ -3,12 +3,13 @@ package main
 import (
 	"log"
 	"net/http"
+
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	cfg := getConfig()
-	initialiseDatabase()
+	initialiseDatabase(cfg.Database.Location)
 
 	router := mux.NewRouter().StrictSlash(true)
 

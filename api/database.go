@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -13,15 +14,16 @@ type tea struct {
 
 var db *sql.DB
 
-func initialiseDatabase() {
-	log.Println("Initialising the database.")
-	database, err := sql.Open("sqlite3", "tea-store.db")
+func initialiseDatabase(loc string) {
+	log.Println("Initialising the database...")
+	database, err := sql.Open("sqlite3", loc)
 	checkError("opening database", err)
 	db = database
 
 	db.SetMaxOpenConns(1)
-
 	setupTeaTable()
+
+	log.Println("Database initialised.")
 }
 
 func setupTeaTable() {
