@@ -122,6 +122,22 @@ func createTeaOwnersTable(db *sql.DB) {
 	checkError("creating owner table", err)
 }
 
+// GetAllTeaTypesFromDatabase retrieves all the tea types available in the database.
+func GetAllTeaTypesFromDatabase() []TeaType {
+	rows, err := db.Query("SELECT * FROM types;")
+	checkError("fetching all tea types", err)
+	defer rows.Close()
+
+	teaTypes := make([]TeaType, 0)
+	for rows.Next() {
+		teaType := new(TeaType)
+		err := rows.Scan(&teaType.ID, &teaType.Name)
+		checkError("creating owner object", err)
+		teaTypes = append(teaTypes, *teaType)
+	}
+	return teaTypes
+}
+
 func checkError(s string, e error) {
 	if e != nil {
 		log.Fatalf("Error "+s+": %v", e)
