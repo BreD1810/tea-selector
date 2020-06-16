@@ -12,7 +12,8 @@ type config struct {
 		Port string `yaml:"port"`
 	} `yaml:"server"`
 	Database struct {
-		Location string `yaml:"location"`
+		Location string   `yaml:"location"`
+		TeaTypes []string `yaml:"teaTypes"`
 	} `yaml:"database"`
 }
 
@@ -38,4 +39,5 @@ func getConfig() config {
 func logConfig(cfg config) {
 	log.Printf("Port: %v\n", cfg.Server.Port)
 	log.Printf("Database Location: %v\n", cfg.Database.Location)
+	log.Printf("Tea types: %q\n", cfg.Database.TeaTypes)
 }

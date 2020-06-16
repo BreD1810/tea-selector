@@ -8,6 +8,7 @@ import (
 
 func TestCreateTeaTypeTable(t *testing.T) {
 	createTeaTypeString := "CREATE TABLE types"
+	teaTypes := []string{"Black Tea", "Green Tea"}
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Error occurred setting up mock database: %v", err)
@@ -15,8 +16,9 @@ func TestCreateTeaTypeTable(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectExec(createTeaTypeString).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("INSERT INTO types \\(name\\) VALUES \\('" + teaTypes[0] + "'\\), \\('" + teaTypes[1] + "'\\);").WillReturnResult(sqlmock.NewResult(2,2))
 
-	createTeaTypeTable(db)
+	createTeaTypeTable(db, teaTypes)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("There were unfulfilled expections: %s", err)

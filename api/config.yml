@@ -3,3 +3,14 @@ server:
 
 database:
     location: "tea-store.db"
+    teaTypes:
+        - "Black Tea"
+        - "Chai Tea"
+        - "Chinese Tea"
+        - "Fruit Tea"
+        - "Green Tea"
+        - "Herbal Tea"
+        - "Matcha"
+        - "Mint Tea"
+        - "Rooibos"
+        - "White Tea"
