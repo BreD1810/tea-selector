@@ -9,7 +9,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
+// DB is the database being used.
+var DB *sql.DB
 
 func initialiseDatabase(cfg Config) {
 	log.Println("Initialising the database...")
@@ -22,9 +23,9 @@ func initialiseDatabase(cfg Config) {
 	} else {
 		database, err := sql.Open("sqlite3", cfg.Database.Location)
 		checkError("opening database", err)
-		db = database
-		db.SetMaxOpenConns(1)
-		db.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
+		DB = database
+		DB.SetMaxOpenConns(1)
+		DB.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
 	}
 	log.Println("Database initialised.")
 }
@@ -32,14 +33,14 @@ func initialiseDatabase(cfg Config) {
 func createDatabase(cfg Config) {
 	database, err := sql.Open("sqlite3", cfg.Database.Location)
 	checkError("creating database", err)
-	db = database
-	db.SetMaxOpenConns(1)
-	db.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
+	DB = database
+	DB.SetMaxOpenConns(1)
+	DB.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
 
-	createTeaTypeTable(db, cfg.Database.TeaTypes)
-	createTeaTable(db)
-	createOwnerTable(db, cfg.Database.Owners)
-	createTeaOwnersTable(db)
+	createTeaTypeTable(DB, cfg.Database.TeaTypes)
+	createTeaTable(DB)
+	createOwnerTable(DB, cfg.Database.Owners)
+	createTeaOwnersTable(DB)
 }
 
 func createTeaTypeTable(db *sql.DB, types []string) {
@@ -124,7 +125,7 @@ func createTeaOwnersTable(db *sql.DB) {
 
 // GetAllTeaTypesFromDatabase retrieves all the tea types available in the database.
 func GetAllTeaTypesFromDatabase() []TeaType {
-	rows, err := db.Query("SELECT * FROM types;")
+	rows, err := DB.Query("SELECT * FROM types;")
 	checkError("fetching all tea types", err)
 	defer rows.Close()
 
