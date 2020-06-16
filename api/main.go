@@ -13,7 +13,7 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/", testResponse).Methods("GET")
+	router.HandleFunc("/types", getAllTeaTypesHandler).Methods("Get")
 
 	addr := ":" + cfg.Server.Port
 	log.Fatal(http.ListenAndServe(addr, router))

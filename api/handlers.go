@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 )
 
@@ -30,6 +30,10 @@ type TeaOwners struct {
 	OwnerID int `json:"ownerID"`
 }
 
-func testResponse(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, world!")
+// GetAllTeaTypesFunc points to the function to get all tea typevalues. Useful for mocking
+var GetAllTeaTypesFunc = GetAllTeaTypesFromDatabase
+
+func getAllTeaTypesHandler(w http.ResponseWriter, r *http.Request) {
+	types := GetAllTeaTypesFunc()
+	json.NewEncoder(w).Encode(types)
 }
