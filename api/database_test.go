@@ -25,6 +25,24 @@ func TestCreateTeaTypeTable(t *testing.T) {
 	}
 }
 
+func TestCreateEmptyTeaTypeTable(t *testing.T) {
+	createTeaTypeString := "CREATE TABLE types"
+	teaTypes := []string{}
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v", err)
+	}
+	defer db.Close()
+
+	mock.ExpectExec(createTeaTypeString).WillReturnResult(sqlmock.NewResult(0, 0))
+
+	createTeaTypeTable(db, teaTypes)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expections: %s", err)
+	}
+}
+
 func TestCreateTeaTable(t *testing.T) {
 	createTeaString := "CREATE TABLE tea"
 	db, mock, err := sqlmock.New()

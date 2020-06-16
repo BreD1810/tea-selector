@@ -71,17 +71,22 @@ func createTeaTypeTable(db *sql.DB, types []string) {
 	_, err := db.Exec(creationString)
 	checkError("creating types table", err)
 
-    var insertString strings.Builder
-    insertString.WriteString("INSERT INTO types (name) VALUES ")
-	for i, teaType := range types {
-        if i != 0 {
-            insertString.WriteString(", ")
-        }
-        insertString.WriteString("('" + teaType + "')")
-    }
-    insertString.WriteString(";")
-    _, err = db.Exec(insertString.String())
-    checkError("inserting types into the database", err)
+	if len(types) > 0 {
+		var insertString strings.Builder
+		insertString.WriteString("INSERT INTO types (name) VALUES ")
+
+		for i, teaType := range types {
+			if i != 0 {
+				insertString.WriteString(", ")
+			}
+			insertString.WriteString("('" + teaType + "')")
+		}
+
+		insertString.WriteString(";")
+
+		_, err = db.Exec(insertString.String())
+		checkError("inserting types into the database", err)
+	}
 }
 
 func createTeaTable(db *sql.DB) {
