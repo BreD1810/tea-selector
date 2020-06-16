@@ -8,9 +8,25 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type tea struct {
+type types struct {
 	id   int
 	name string
+}
+
+type tea struct {
+	id      int
+	name    string
+	teaType int
+}
+
+type owner struct {
+	id   int
+	name string
+}
+
+type teaOwners struct {
+	teaID   int
+	ownerID int
 }
 
 var db *sql.DB
@@ -28,6 +44,7 @@ func initialiseDatabase(loc string) {
 		checkError("opening database", err)
 		db = database
 		db.SetMaxOpenConns(1)
+		db.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
 	}
 	log.Println("Database initialised.")
 }
@@ -37,16 +54,61 @@ func createDatabase(loc string) {
 	checkError("creating database", err)
 	db = database
 	db.SetMaxOpenConns(1)
+	db.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
 
+	createTeaTypeTable(db)
 	createTeaTable(db)
+	createOwnerTable(db)
+	createTeaOwnersTable(db)
+}
+
+func createTeaTypeTable(db *sql.DB) {
+	creationString := `CREATE TABLE types (
+							id INTEGER PRIMARY KEY AUTOINCREMENT,
+							name TEXT NOT NULL
+					   );`
+	res, err := db.Exec(creationString)
+	checkError("creating types table", err)
+	log.Println(res)
 }
 
 func createTeaTable(db *sql.DB) {
-	stmt, err := db.Prepare("CREATE TABLE tea (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);")
+	creationString := `CREATE TABLE tea (
+							id INTEGER PRIMARY KEY AUTOINCREMENT,
+							name TEXT NOT NULL,
+							teaType INTEGER,
+							FOREIGN KEY (teaType) REFERENCES types (id)
+								ON UPDATE CASCADE
+								ON DELETE RESTRICT
+					   );`
+	res, err := db.Exec(creationString)
 	checkError("creating tea table", err)
+	log.Println(res)
+}
 
-	res, err := stmt.Exec()
-	checkError("creating tea table", err)
+func createOwnerTable(db *sql.DB) {
+	creationString := `CREATE TABLE owner (
+							id INTEGER PRIMARY KEY AUTOINCREMENT,
+							name TEXT NOT NULL
+					   );`
+	res, err := db.Exec(creationString)
+	checkError("creating owner table", err)
+	log.Println(res)
+}
+
+func createTeaOwnersTable(db *sql.DB) {
+	creationString := `CREATE TABLE teaOwners (
+							teaID INTEGER,
+							ownerID INTEGER,
+							FOREIGN KEY (teaID) REFERENCES tea (id)
+								ON UPDATE CASCADE
+								ON DELETE RESTRICT,
+							FOREIGN KEY (ownerID) REFERENCES owner (id)
+								ON UPDATE CASCADE
+								ON DELETE RESTRICT
+					   );`
+	res, err := db.Exec(creationString)
+	checkError("creating owner table", err)
 	log.Println(res)
 }
 
