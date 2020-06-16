@@ -16,7 +16,7 @@ func TestCreateTeaTypeTable(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectExec(createTeaTypeString).WillReturnResult(sqlmock.NewResult(0, 0))
-	mock.ExpectExec("INSERT INTO types \\(name\\) VALUES \\('" + teaTypes[0] + "'\\), \\('" + teaTypes[1] + "'\\);").WillReturnResult(sqlmock.NewResult(2,2))
+	mock.ExpectExec("INSERT INTO types \\(name\\) VALUES \\('" + teaTypes[0] + "'\\), \\('" + teaTypes[1] + "'\\);").WillReturnResult(sqlmock.NewResult(2, 2))
 
 	createTeaTypeTable(db, teaTypes)
 
@@ -62,6 +62,26 @@ func TestCreateTeaTable(t *testing.T) {
 
 func TestCreateOwnerTable(t *testing.T) {
 	createOwnerString := "CREATE TABLE owner"
+	owners := []string{"John", "Jane"}
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v", err)
+	}
+	defer db.Close()
+
+	mock.ExpectExec(createOwnerString).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("INSERT INTO owner \\(name\\) VALUES \\('" + owners[0] + "'\\), \\('" + owners[1] + "'\\);").WillReturnResult(sqlmock.NewResult(2, 2))
+
+	createOwnerTable(db, owners)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expections: %s", err)
+	}
+}
+
+func TestCreateEmptyOwnerTable(t *testing.T) {
+	createOwnerString := "CREATE TABLE owner"
+	owners := []string{}
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Error occurred setting up mock database: %v", err)
@@ -70,7 +90,7 @@ func TestCreateOwnerTable(t *testing.T) {
 
 	mock.ExpectExec(createOwnerString).WillReturnResult(sqlmock.NewResult(0, 0))
 
-	createOwnerTable(db)
+	createOwnerTable(db, owners)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("There were unfulfilled expections: %s", err)

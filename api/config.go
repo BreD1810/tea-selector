@@ -15,10 +15,11 @@ type Config struct {
 	Database struct {
 		Location string   `yaml:"location"`
 		TeaTypes []string `yaml:"teaTypes"`
+		Owners   []string `yaml:"owners"`
 	} `yaml:"database"`
 }
 
-func getConfig() config {
+func getConfig() Config {
 	f, err := os.Open("config.yml")
 
 	if err != nil {
@@ -26,7 +27,7 @@ func getConfig() config {
 	}
 	defer f.Close()
 
-	var cfg config
+	var cfg Config
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&cfg)
 	if err != nil {
@@ -37,7 +38,7 @@ func getConfig() config {
 	return cfg
 }
 
-func logConfig(cfg config) {
+func logConfig(cfg Config) {
 	log.Printf("Port: %v\n", cfg.Server.Port)
 	log.Printf("Database Location: %v\n", cfg.Database.Location)
 	log.Printf("Tea types: %q\n", cfg.Database.TeaTypes)

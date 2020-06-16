@@ -32,16 +32,16 @@ type teaOwners struct {
 
 var db *sql.DB
 
-func initialiseDatabase(loc string, types []string) {
+func initialiseDatabase(cfg Config) {
 	log.Println("Initialising the database...")
 
 	// Check if the database doesn't exists
-	if _, err := os.Stat(loc); os.IsNotExist(err) {
+	if _, err := os.Stat(cfg.Database.Location); os.IsNotExist(err) {
 		log.Println("Database doesn't exist. Creating...")
-		createDatabase(loc, types)
+		createDatabase(cfg)
 		log.Println("Database created.")
 	} else {
-		database, err := sql.Open("sqlite3", loc)
+		database, err := sql.Open("sqlite3", cfg.Database.Location)
 		checkError("opening database", err)
 		db = database
 		db.SetMaxOpenConns(1)
@@ -50,16 +50,16 @@ func initialiseDatabase(loc string, types []string) {
 	log.Println("Database initialised.")
 }
 
-func createDatabase(loc string, types []string) {
-	database, err := sql.Open("sqlite3", loc)
+func createDatabase(cfg Config) {
+	database, err := sql.Open("sqlite3", cfg.Database.Location)
 	checkError("creating database", err)
 	db = database
 	db.SetMaxOpenConns(1)
 	db.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
 
-	createTeaTypeTable(db, types)
+	createTeaTypeTable(db, cfg.Database.TeaTypes)
 	createTeaTable(db)
-	createOwnerTable(db)
+	createOwnerTable(db, cfg.Database.Owners)
 	createTeaOwnersTable(db)
 }
 
@@ -102,13 +102,30 @@ func createTeaTable(db *sql.DB) {
 	checkError("creating tea table", err)
 }
 
-func createOwnerTable(db *sql.DB) {
+func createOwnerTable(db *sql.DB, owners []string) {
 	creationString := `CREATE TABLE owner (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
 							name TEXT NOT NULL
 					   );`
 	_, err := db.Exec(creationString)
 	checkError("creating owner table", err)
+
+	if len(owners) > 0 {
+		var insertString strings.Builder
+		insertString.WriteString("INSERT INTO owner (name) VALUES ")
+
+		for i, name := range owners {
+			if i != 0 {
+				insertString.WriteString(", ")
+			}
+			insertString.WriteString("('" + name + "')")
+		}
+
+		insertString.WriteString(";")
+
+		_, err = db.Exec(insertString.String())
+		checkError("inserting owners into the database", err)
+	}
 }
 
 func createTeaOwnersTable(db *sql.DB) {

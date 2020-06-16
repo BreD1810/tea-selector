@@ -9,7 +9,7 @@ import (
 
 func main() {
 	cfg := getConfig()
-	initialiseDatabase(cfg.Database.Location, cfg.Database.TeaTypes)
+	initialiseDatabase(cfg)
 
 	router := mux.NewRouter().StrictSlash(true)
 
