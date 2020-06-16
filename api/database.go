@@ -9,27 +9,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type types struct {
-	id   int
-	name string
-}
-
-type tea struct {
-	id      int
-	name    string
-	teaType int
-}
-
-type owner struct {
-	id   int
-	name string
-}
-
-type teaOwners struct {
-	teaID   int
-	ownerID int
-}
-
 var db *sql.DB
 
 func initialiseDatabase(cfg Config) {
