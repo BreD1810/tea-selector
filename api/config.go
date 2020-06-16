@@ -7,7 +7,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type config struct {
+// A Config represents the config file data.
+type Config struct {
 	Server struct {
 		Port string `yaml:"port"`
 	} `yaml:"server"`
