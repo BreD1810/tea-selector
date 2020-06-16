@@ -42,4 +42,5 @@ func logConfig(cfg Config) {
 	log.Printf("Port: %v\n", cfg.Server.Port)
 	log.Printf("Database Location: %v\n", cfg.Database.Location)
 	log.Printf("Tea types: %q\n", cfg.Database.TeaTypes)
+	log.Printf("Owners: %q\n", cfg.Database.Owners)
 }
