@@ -37,18 +37,18 @@ func createDatabase(cfg Config) {
 	DB.SetMaxOpenConns(1)
 	DB.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
 
-	createTeaTypeTable(DB, cfg.Database.TeaTypes)
-	createTeaTable(DB)
-	createOwnerTable(DB, cfg.Database.Owners)
-	createTeaOwnersTable(DB)
+	createTeaTypeTable(cfg.Database.TeaTypes)
+	createTeaTable()
+	createOwnerTable(cfg.Database.Owners)
+	createTeaOwnersTable()
 }
 
-func createTeaTypeTable(db *sql.DB, types []string) {
+func createTeaTypeTable(types []string) {
 	creationString := `CREATE TABLE types (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
 							name TEXT NOT NULL
 					   );`
-	_, err := db.Exec(creationString)
+	_, err := DB.Exec(creationString)
 	checkError("creating types table", err)
 
 	if len(types) > 0 {
@@ -64,12 +64,12 @@ func createTeaTypeTable(db *sql.DB, types []string) {
 
 		insertString.WriteString(";")
 
-		_, err = db.Exec(insertString.String())
+		_, err = DB.Exec(insertString.String())
 		checkError("inserting types into the database", err)
 	}
 }
 
-func createTeaTable(db *sql.DB) {
+func createTeaTable() {
 	creationString := `CREATE TABLE tea (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
 							name TEXT NOT NULL,
@@ -78,16 +78,16 @@ func createTeaTable(db *sql.DB) {
 								ON UPDATE CASCADE
 								ON DELETE RESTRICT
 					   );`
-	_, err := db.Exec(creationString)
+	_, err := DB.Exec(creationString)
 	checkError("creating tea table", err)
 }
 
-func createOwnerTable(db *sql.DB, owners []string) {
+func createOwnerTable(owners []string) {
 	creationString := `CREATE TABLE owner (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
 							name TEXT NOT NULL
 					   );`
-	_, err := db.Exec(creationString)
+	_, err := DB.Exec(creationString)
 	checkError("creating owner table", err)
 
 	if len(owners) > 0 {
@@ -103,12 +103,12 @@ func createOwnerTable(db *sql.DB, owners []string) {
 
 		insertString.WriteString(";")
 
-		_, err = db.Exec(insertString.String())
+		_, err = DB.Exec(insertString.String())
 		checkError("inserting owners into the database", err)
 	}
 }
 
-func createTeaOwnersTable(db *sql.DB) {
+func createTeaOwnersTable() {
 	creationString := `CREATE TABLE teaOwners (
 							teaID INTEGER,
 							ownerID INTEGER,
@@ -119,7 +119,7 @@ func createTeaOwnersTable(db *sql.DB) {
 								ON UPDATE CASCADE
 								ON DELETE RESTRICT
 					   );`
-	_, err := db.Exec(creationString)
+	_, err := DB.Exec(creationString)
 	checkError("creating owner table", err)
 }
 
