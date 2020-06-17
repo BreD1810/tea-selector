@@ -17,7 +17,7 @@ api_unit_tests:
         - ln -s $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds/$GROUP
         - go get -v -d -t ./...
     script:
-        - go test -v ./api
+        - go test -v ./api -coverprofile .goCoverage.txt
 
 api_build:
     stage: build
