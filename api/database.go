@@ -46,7 +46,7 @@ func createDatabase(cfg Config) {
 func createTeaTypeTable(types []string) {
 	creationString := `CREATE TABLE types (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
-							name TEXT NOT NULL
+							name TEXT NOT NULL UNIQUE
 					   );`
 	_, err := DB.Exec(creationString)
 	checkError("creating types table", err)
@@ -137,6 +137,15 @@ func GetAllTeaTypesFromDatabase() []TeaType {
 		teaTypes = append(teaTypes, *teaType)
 	}
 	return teaTypes
+}
+
+// CreateTeaTypeInDatabase adds a new tea type to the database
+func CreateTeaTypeInDatabase(teaType TeaType) error {
+	_, err := DB.Exec("INSERT INTO types (name) values ('" + teaType.Name + "');")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func checkError(s string, e error) {

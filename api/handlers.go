@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -36,4 +37,39 @@ var GetAllTeaTypesFunc = GetAllTeaTypesFromDatabase
 func getAllTeaTypesHandler(w http.ResponseWriter, r *http.Request) {
 	types := GetAllTeaTypesFunc()
 	json.NewEncoder(w).Encode(types)
+}
+
+// CreateTeaTypeFunc points to the function to create a new type of team in the database. Useful for mocking.
+var CreateTeaTypeFunc = CreateTeaTypeInDatabase
+
+func createTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
+	var teaType TeaType
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&teaType); err != nil {
+		log.Printf("Failed to create new tea: %s\n", teaType.Name)
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+
+	if err := CreateTeaTypeFunc(teaType); err != nil {
+		log.Printf("Error creating tea type: %s\n\t Error: %s\n", teaType.Name, err)
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	log.Printf("Created new tea type: %s\n", teaType.Name)
+	respondWithJSON(w, http.StatusCreated, teaType)
+}
+
+func respondWithError(w http.ResponseWriter, code int, message string) {
+	respondWithJSON(w, code, map[string]string{"error": message})
+}
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(response)
 }
