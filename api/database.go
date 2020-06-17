@@ -12,6 +12,12 @@ import (
 // DB is the database being used.
 var DB *sql.DB
 
+func checkError(s string, e error) {
+	if e != nil {
+		log.Fatalf("Error "+s+": %v", e)
+	}
+}
+
 func initialiseDatabase(cfg Config) {
 	log.Println("Initialising the database...")
 
@@ -162,8 +168,17 @@ func CreateTeaTypeInDatabase(teaType *TeaType) error {
 	return nil
 }
 
-func checkError(s string, e error) {
-	if e != nil {
-		log.Fatalf("Error "+s+": %v", e)
+// DeleteTeaTypeInDatabase deletes a tea type from the database.
+func DeleteTeaTypeInDatabase(teaType *TeaType) error {
+	rows, err := DB.Query("SELECT name FROM types WHERE id=$1;", teaType.ID)
+
+	rows.Next()
+	err = rows.Scan(&teaType.Name)
+	if err != nil {
+		return err
 	}
+	rows.Close()
+
+	_, err = DB.Exec("DELETE FROM types WHERE id = $1;", teaType.ID)
+	return err
 }

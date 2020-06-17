@@ -15,6 +15,7 @@ func main() {
 
 	router.HandleFunc("/types", getAllTeaTypesHandler).Methods("GET")
 	router.HandleFunc("/type", createTeaTypeHandler).Methods("POST")
+	router.HandleFunc("/type/{id:[0-9]+}", deleteTeaTypeHandler).Methods("DELETE")
 
 	addr := ":" + cfg.Server.Port
 	log.Fatal(http.ListenAndServe(addr, router))
