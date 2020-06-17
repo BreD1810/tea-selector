@@ -162,3 +162,36 @@ func TestGetAllTeaTypesFromDatabase(t *testing.T) {
 		t.Errorf("There were unfulfilled expectations: %s", err)
 	}
 }
+
+func TestCreateTeaTypeInDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaName := "Black Tea"
+	rows := mock.NewRows([]string{"id"})
+	rows.AddRow("1")
+	mock.ExpectExec("INSERT INTO types \\(name\\) VALUES \\('" + teaName + "'\\)").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectQuery("SELECT ID FROM types").WillReturnRows(rows)
+
+	teaType := TeaType{ID: 1, Name: teaName}
+	err = CreateTeaTypeInDatabase(&teaType)
+	if err != nil {
+		t.Errorf("Error whilst trying to insert into database: %v\n", err)
+	}
+	if teaType.ID != 1 {
+		t.Errorf("Tea type ID not updated:\n Got: %d\n Expected: %v\n", teaType.ID, 1)
+	}
+	if teaType.Name != teaName {
+		t.Errorf("Tea type Name not as expected:\n Got: %q\n Expected: %q\n", teaType.Name, teaName)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s", err)
+	}
+}
