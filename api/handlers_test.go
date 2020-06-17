@@ -30,16 +30,16 @@ func TestGetAllTeaTypesHandler(t *testing.T) {
 		t.Errorf("GET /types returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
 	}
 
-	expected := "[{\"id\":1,\"name\":\"Black Tea\"},{\"id\":2,\"name\":\"Green Tea\"}]\n"
+	expected := `[{"id":1,"name":"Black Tea"},{"id":2,"name":"Green Tea"}]`
 	if actual := rr.Body.String(); actual != expected {
 		t.Errorf("GET /types returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
 	}
 }
 
-func allTeaResponseMock() []TeaType {
+func allTeaResponseMock() ([]TeaType, error) {
 	tea1 := TeaType{ID: 1, Name: "Black Tea"}
 	tea2 := TeaType{ID: 2, Name: "Green Tea"}
-	return []TeaType{tea1, tea2}
+	return []TeaType{tea1, tea2}, nil
 }
 
 func TestCreateTeaTypeHandler(t *testing.T) {
@@ -87,8 +87,8 @@ func TestErrorCreateTeaTypeHandler(t *testing.T) {
 	handler := http.HandlerFunc(createTeaTypeHandler)
 	handler.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusBadRequest {
-		t.Errorf("PUT /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusBadRequest)
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("PUT /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
 	}
 
 	expected := `{"error":"Error"}`
@@ -152,8 +152,8 @@ func TestDeleteTeaTypeErrorHandler(t *testing.T) {
 	handler := http.HandlerFunc(deleteTeaTypeHandler)
 	handler.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusBadRequest {
-		t.Errorf("DELETE /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusBadRequest)
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("DELETE /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
 	}
 
 	expected := `{"error":"ID does not exist in database"}`

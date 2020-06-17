@@ -130,19 +130,23 @@ func createTeaOwnersTable() {
 }
 
 // GetAllTeaTypesFromDatabase retrieves all the tea types available in the database.
-func GetAllTeaTypesFromDatabase() []TeaType {
+func GetAllTeaTypesFromDatabase() ([]TeaType, error) {
 	rows, err := DB.Query("SELECT * FROM types;")
-	checkError("fetching all tea types", err)
+	if err != nil {
+		return nil, err
+	}
 	defer rows.Close()
 
 	teaTypes := make([]TeaType, 0)
 	for rows.Next() {
 		teaType := new(TeaType)
 		err := rows.Scan(&teaType.ID, &teaType.Name)
-		checkError("creating owner object", err)
+		if err != nil {
+			return nil, err
+		}
 		teaTypes = append(teaTypes, *teaType)
 	}
-	return teaTypes
+	return teaTypes, nil
 }
 
 // CreateTeaTypeInDatabase adds a new tea type to the database

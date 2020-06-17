@@ -148,7 +148,7 @@ func TestGetAllTeaTypesFromDatabase(t *testing.T) {
 
 	mock.ExpectQuery("SELECT \\* FROM types;").WillReturnRows(rows)
 
-	teaTypes := GetAllTeaTypesFunc()
+	teaTypes, _ := GetAllTeaTypesFunc()
 	expected := TeaType{1, "Black Tea"}
 	if teaTypes[0] != expected {
 		t.Errorf("Database returned unexpected result:\n got: %v\n wanted: %v", teaTypes[0], expected)

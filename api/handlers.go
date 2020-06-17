@@ -50,8 +50,14 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 var GetAllTeaTypesFunc = GetAllTeaTypesFromDatabase
 
 func getAllTeaTypesHandler(w http.ResponseWriter, r *http.Request) {
-	types := GetAllTeaTypesFunc()
-	json.NewEncoder(w).Encode(types)
+	types, err := GetAllTeaTypesFunc()
+	if err != nil {
+		log.Printf("Error retrieving all tea types: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Println("Successfully handled request to see all tea types")
+	respondWithJSON(w, http.StatusOK, types)
 }
 
 // CreateTeaTypeFunc points to the function to create a new type of tea in the database. Useful for mocking.
@@ -69,7 +75,7 @@ func createTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := CreateTeaTypeFunc(&teaType); err != nil {
 		log.Printf("Error creating tea type: %s\n\t Error: %s\n", teaType.Name, err)
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -94,7 +100,7 @@ func deleteTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 	if err := DeleteTeaTypeFunc(&teaType); err != nil {
 		if err.Error() == "sql: Rows are closed" {
 			log.Printf("Failed to delete tea type as ID didn't exist. ID: %d\n", id)
-			respondWithError(w, http.StatusBadRequest, "ID does not exist in database")
+			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")
 			return
 		}
 		log.Printf("Failed to delete tea type with ID: %d\n Error: %v\n", id, err)
