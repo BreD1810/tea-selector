@@ -13,6 +13,22 @@ To build an executable, run:
 go build
 ```
 
+## Configuration
+The `config.yml` file gives an example configuration. This can be changed to your liking. You can:
+- Set the port the API runs on.
+- Set the database location
+- Set the default tea types and owners.
+
 ## Interacting with the API
 By default, the API will be running on `localhost:7344`.
-...
+
+### Tea Types
+
+- To see all current tea types, send a GET requestio to `/types`.
+
+- To add a new tea type, send a POST request to `/type`. An example body is :
+
+        {
+            "name": "Black Tea"
+        }
+
