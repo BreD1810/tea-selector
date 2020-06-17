@@ -52,13 +52,13 @@ func createTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if err := CreateTeaTypeFunc(teaType); err != nil {
+	if err := CreateTeaTypeFunc(&teaType); err != nil {
 		log.Printf("Error creating tea type: %s\n\t Error: %s\n", teaType.Name, err)
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	log.Printf("Created new tea type: %s\n", teaType.Name)
+	log.Printf("Created new tea type. ID: %d, Name: %s\n", teaType.ID, teaType.Name)
 	respondWithJSON(w, http.StatusCreated, teaType)
 }
 

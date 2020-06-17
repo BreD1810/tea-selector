@@ -140,11 +140,25 @@ func GetAllTeaTypesFromDatabase() []TeaType {
 }
 
 // CreateTeaTypeInDatabase adds a new tea type to the database
-func CreateTeaTypeInDatabase(teaType TeaType) error {
-	_, err := DB.Exec("INSERT INTO types (name) values ('" + teaType.Name + "');")
+func CreateTeaTypeInDatabase(teaType *TeaType) error {
+	_, err := DB.Exec("INSERT INTO types (name) VALUES ('" + teaType.Name + "');")
 	if err != nil {
 		return err
 	}
+
+	rows, err := DB.Query("SELECT ID FROM types WHERE name = ('" + teaType.Name + "');")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	rows.Next()
+	err = rows.Scan(&teaType.ID)
+	if err != nil {
+		return err
+	}
+	log.Printf("New ID: %d\n", teaType.ID)
+
 	return nil
 }
 
