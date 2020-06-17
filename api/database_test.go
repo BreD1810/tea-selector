@@ -182,13 +182,81 @@ func TestCreateTeaTypeInDatabase(t *testing.T) {
 	teaType := TeaType{ID: 1, Name: teaName}
 	err = CreateTeaTypeInDatabase(&teaType)
 	if err != nil {
-		t.Errorf("Error whilst trying to insert into database: %v\n", err)
+		t.Errorf("Error whilst trying to insert tea type into database: %v\n", err)
 	}
 	if teaType.ID != 1 {
 		t.Errorf("Tea type ID not updated:\n Got: %d\n Expected: %v\n", teaType.ID, 1)
 	}
 	if teaType.Name != teaName {
 		t.Errorf("Tea type Name not as expected:\n Got: %q\n Expected: %q\n", teaType.Name, teaName)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestDeleteTeaTypeInDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaName := "Black Tea"
+	teaID := 1
+	rows := mock.NewRows([]string{"name"})
+	rows.AddRow(teaName)
+
+	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnRows(rows)
+	mock.ExpectExec("DELETE FROM types").WithArgs(1).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	teaType := TeaType{ID: teaID}
+	err = DeleteTeaTypeFunc(&teaType)
+	if err != nil {
+		t.Errorf("Error whilst trying to delete tea type from database: %v\n", err)
+	}
+	if teaType.ID != teaID {
+		t.Errorf("Tea type ID changed:\n Got: %d\n Expected: %v\n", teaType.ID, teaID)
+	}
+	if teaType.Name != teaName {
+		t.Errorf("Tea type Name not as expected:\n Got: %q\n Expected: %q\n", teaType.Name, teaName)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestDeleteNonExistantTeaTypeInDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	// teaName := "Black Tea"
+	teaID := 1
+	rows := mock.NewRows([]string{"name"})
+
+	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnRows(rows)
+
+	teaType := TeaType{ID: teaID}
+	err = DeleteTeaTypeFunc(&teaType)
+	if err.Error() != "sql: Rows are closed" {
+		t.Errorf("Error whilst trying to delete tea type from database: %v\n", err)
+	}
+	if teaType.ID != teaID {
+		t.Errorf("Tea type ID changed:\n Got: %d\n Expected: %v\n", teaType.ID, teaID)
+	}
+	if teaType.Name != "" {
+		t.Errorf("Tea type Name was unexpectedly updated:\n Got: %q\n Expected: \"\"\n", teaType.Name)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {

@@ -13,9 +13,10 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/types", getAllTeaTypesHandler).Methods("GET")
-	router.HandleFunc("/type", createTeaTypeHandler).Methods("POST")
-	router.HandleFunc("/type/{id:[0-9]+}", deleteTeaTypeHandler).Methods("DELETE")
+	router.HandleFunc("/types", getAllTeaTypesHandler).Methods(http.MethodGet)
+	// router.HandleFunc("/type", getTeaTypeHandler).Methods(http.MethodGet)
+	router.HandleFunc("/type", createTeaTypeHandler).Methods(http.MethodDelete)
+	router.HandleFunc("/type/{id:[0-9]+}", deleteTeaTypeHandler).Methods(http.MethodDelete)
 
 	addr := ":" + cfg.Server.Port
 	log.Fatal(http.ListenAndServe(addr, router))
