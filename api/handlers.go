@@ -163,3 +163,33 @@ func getAllOwnersHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Successfully handled request to see all owners")
 	respondWithJSON(w, http.StatusOK, owners)
 }
+
+// GetOwnerFunc points to a function to get information about an owner from the database. Useful for mocking
+var GetOwnerFunc = GetOwnerFromDatabase
+
+func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Printf("Failed to get owner with ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusBadRequest, "Invalid owner ID")
+		return
+	}
+	log.Printf("Received request \"GET /owner/%d\"\n", id)
+
+	owner := Owner{ID: id}
+
+	if err := GetOwnerFunc(&owner); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Failed to get owner as ID didn't exist. ID: %d\n", id)
+			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")
+			return
+		}
+		log.Printf("Failed to get owner with id: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Got owner with ID: %d\n", id)
+	respondWithJSON(w, http.StatusOK, owner)
+}

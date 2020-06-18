@@ -218,3 +218,15 @@ func GetAllOwnersFromDatabase() ([]Owner, error) {
 	}
 	return owners, nil
 }
+
+// GetOwnerFromDatabase gets an owner from the database by their ID.
+func GetOwnerFromDatabase(owner *Owner) error {
+	row := DB.QueryRow("SELECT name FROM owner WHERE id=$1;", owner.ID)
+
+	err := row.Scan(&owner.Name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
