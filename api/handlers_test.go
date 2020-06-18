@@ -609,3 +609,68 @@ func TestErrorCreateTeaHandler(t *testing.T) {
 func createTeaResponseErrorMock(tea *Tea) error {
 	return errors.New("Error")
 }
+
+func TestDeleteTEaHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodDelete, "/tea", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := DeleteTeaFunc
+	defer func() { DeleteTeaFunc = oldFunc }()
+	DeleteTeaFunc = deleteTeaResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(deleteTeaHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("DELETE /tea returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `{"name":"Snowball","result":"success"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("DELETE /tea returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func deleteTeaResponseMock(tea *Tea) error {
+	tea.Name = "Snowball"
+	return nil
+}
+
+func TestDeleteTeaErrorHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodDelete, "/tea", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := DeleteTeaFunc
+	defer func() { DeleteTeaFunc = oldFunc }()
+	DeleteTeaFunc = deleteTeaResponseErrorMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(deleteTeaHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("DELETE /tea returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"ID does not exist in database"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("DELETE /tea returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func deleteTeaResponseErrorMock(tea *Tea) error {
+	return errors.New("sql: Rows are closed")
+}

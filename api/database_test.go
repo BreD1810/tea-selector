@@ -745,3 +745,70 @@ func TestCreateTeaInDatabaseInsertError(t *testing.T) {
 		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
+
+func TestDeleteTeaFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaName := "Snowball"
+	teaID := 1
+	rows := mock.NewRows([]string{"name"})
+	rows.AddRow(teaName)
+
+	mock.ExpectQuery("SELECT name FROM tea").WithArgs(teaID).WillReturnRows(rows)
+	mock.ExpectExec("DELETE FROM tea").WithArgs(teaID).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	tea := Tea{ID: teaID}
+	err = DeleteTeaFromDatabase(&tea)
+	if err != nil {
+		t.Errorf("Error whilst trying to delete tea from database: %v\n", err)
+	}
+	if tea.ID != teaID {
+		t.Errorf("Tea ID changed:\n Got: %d\n Expected: %v\n", tea.ID, teaID)
+	}
+	if tea.Name != teaName {
+		t.Errorf("Tea Name not as expected:\n Got: %q\n Expected: %q\n", tea.Name, teaName)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n\n", err)
+	}
+}
+
+func TestDeleteNonExistantTeaFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaID := 1
+	rows := mock.NewRows([]string{"name"})
+
+	mock.ExpectQuery("SELECT name FROM tea").WithArgs(teaID).WillReturnRows(rows)
+
+	tea := Tea{ID: teaID}
+	err = DeleteTeaFromDatabase(&tea)
+	if err.Error() != "sql: Rows are closed" {
+		t.Errorf("Error whilst trying to delete tea from database: %v\n", err)
+	}
+	if tea.ID != teaID {
+		t.Errorf("Tea ID changed:\n Got: %d\n Expected: %v\n", tea.ID, teaID)
+	}
+	if tea.Name != "" {
+		t.Errorf("Tea Name was unexpectedly updated:\n Got: %q\n Expected: \"\"\n", tea.Name)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
