@@ -340,6 +340,7 @@ func DeleteTeaFromDatabase(tea *Tea) error {
 	return err
 }
 
+// GetTeaOwnersFromDatabase gets all owners of a tea using the tea's ID.
 func GetTeaOwnersFromDatabase(tea *Tea) ([]Owner, error) {
 	rows, err := DB.Query("SELECT owner.id, owner.name FROM teaOwners INNER JOIN owner ON teaOwners.ownerID = owner.id WHERE teaOwners.teaID = $1;", tea.ID)
 	if err != nil {
@@ -358,4 +359,37 @@ func GetTeaOwnersFromDatabase(tea *Tea) ([]Owner, error) {
 		owners = append(owners, *owner)
 	}
 	return owners, nil
+}
+
+// GetAllTeaOwnersFromDatabase gets all owners for all teas.
+func GetAllTeaOwnersFromDatabase() ([]TeaWithOwners, error) {
+	teaRows, err := DB.Query("SELECT tea.id, tea.name, tea.teaType, types.name FROM tea INNER JOIN types on types.id = tea.teaType;")
+	if err != nil {
+		return nil, err
+	}
+	defer teaRows.Close()
+
+	teas := make([]Tea, 0)
+	for teaRows.Next() {
+		tea := new(Tea)
+
+		err := teaRows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		teas = append(teas, *tea)
+	}
+
+	teasWithOwners := make([]TeaWithOwners, 0)
+	for _, tea := range teas {
+		owners, err := GetTeaOwnersFromDatabase(&tea)
+		if err != nil {
+			return nil, err
+		}
+
+		teasWithOwners = append(teasWithOwners, TeaWithOwners{Tea: tea, Owners: owners})
+	}
+
+	return teasWithOwners, nil
 }

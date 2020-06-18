@@ -29,10 +29,10 @@ type Owner struct {
 	Name string `json:"name"`
 }
 
-// A TeaOwners details a relationship between a tea Owner and a Tea.
-type TeaOwners struct {
-	TeaID   int `json:"teaID"`
-	OwnerID int `json:"ownerID"`
+// A TeaWithOwners details a relationship between a tea Owner and a Tea.
+type TeaWithOwners struct {
+	Tea    Tea     `json:"tea"`
+	Owners []Owner `json:"owners"`
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -379,4 +379,20 @@ func getTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Got owners of tea with ID: %d\n", id)
 	respondWithJSON(w, http.StatusOK, owners)
+}
+
+// GetAllTeaOwnersFunc points to a function to get a list of teas and their owners. Useful for mocking.
+var GetAllTeaOwnersFunc = GetAllTeaOwnersFromDatabase
+
+func getAllTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(`Received request "GET /tea/owners"`)
+
+	teasWithOwners, err := GetAllTeaOwnersFunc()
+	if err != nil {
+		log.Printf("Error retrieving all teas with owners: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Println("Successfully handled request to see all teas with owners")
+	respondWithJSON(w, http.StatusOK, teasWithOwners)
 }

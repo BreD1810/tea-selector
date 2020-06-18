@@ -29,6 +29,7 @@ func main() {
 	router.HandleFunc("/teas", getAllTeasHandler).Methods(http.MethodGet)
 	router.HandleFunc("/tea/{id:[0-9]+}", getTeaHandler).Methods(http.MethodGet)
 	router.HandleFunc("/tea", createTeaHandler).Methods(http.MethodPost)
+	router.HandleFunc("/tea/owners", getAllTeaOwnersHandler).Methods(http.MethodGet)
 	router.HandleFunc("/tea/{id:[0-9]+}", deleteTeaHandler).Methods(http.MethodDelete)
 	router.HandleFunc("/tea/{id:[0-9]+}/owners", getTeaOwnersHandler).Methods(http.MethodGet)
 
