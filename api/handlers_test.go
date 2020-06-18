@@ -231,3 +231,34 @@ func TestDeleteTeaTypeErrorHandler(t *testing.T) {
 func deleteTeaTypeResponseErrorMock(teaType *TeaType) error {
 	return errors.New("sql: Rows are closed")
 }
+
+func TestGetAllOwnersHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/owners", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock the response from the database
+	oldFunc := GetAllOwnersFunc
+	defer func() { GetAllOwnersFunc = oldFunc }()
+	GetAllOwnersFunc = allTeaOwnersResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getAllOwnersHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("GET /owners returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `[{"id":1,"name":"John"},{"id":2,"name":"Jane"}]`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /ownerss returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func allTeaOwnersResponseMock() ([]Owner, error) {
+	owner1 := Owner{ID: 1, Name: "John"}
+	owner2 := Owner{ID: 2, Name: "Jane"}
+	return []Owner{owner1, owner2}, nil
+}
