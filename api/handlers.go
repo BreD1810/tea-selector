@@ -349,3 +349,34 @@ func deleteTeaHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Deleted tea with ID: %d\n", id)
 	respondWithJSON(w, http.StatusOK, map[string]string{"name": tea.Name, "result": "success"})
 }
+
+// GetTeaOwnersFunc points to a function to get owners of a tea from the database. Useful for mocking.
+var GetTeaOwnersFunc = GetTeaOwnersFromDatabase
+
+func getTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Printf("Failed to get owners of tea with ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusBadRequest, "Invalid tea ID")
+		return
+	}
+	log.Printf("Received request \"GET /tea/%d/owners\"\n", id)
+
+	tea := Tea{ID: id}
+
+	owners, err := GetTeaOwnersFunc(&tea)
+	if err != nil {
+		if err.Error() == "sql: Rows are closed" {
+			log.Printf("Failed to get tea owners as tea ID didn't exist. ID: %d\n", id)
+			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")
+			return
+		}
+		log.Printf("Failed to get tea owners with tea ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Got owners of tea with ID: %d\n", id)
+	respondWithJSON(w, http.StatusOK, owners)
+}

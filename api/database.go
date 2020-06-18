@@ -339,3 +339,23 @@ func DeleteTeaFromDatabase(tea *Tea) error {
 	_, err = DB.Exec("DELETE FROM tea WHERE id = $1;", tea.ID)
 	return err
 }
+
+func GetTeaOwnersFromDatabase(tea *Tea) ([]Owner, error) {
+	rows, err := DB.Query("SELECT owner.id, owner.name FROM teaOwners INNER JOIN owner ON teaOwners.ownerID = owner.id WHERE teaOwners.teaID = $1;", tea.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	owners := make([]Owner, 0)
+	for rows.Next() {
+		owner := new(Owner)
+		err := rows.Scan(&owner.ID, &owner.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		owners = append(owners, *owner)
+	}
+	return owners, nil
+}
