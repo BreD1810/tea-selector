@@ -198,3 +198,23 @@ func DeleteTeaTypeInDatabase(teaType *TeaType) error {
 	_, err = DB.Exec("DELETE FROM types WHERE id = $1;", teaType.ID)
 	return err
 }
+
+// GetAllOwnersFromDatabase gets all the owners from the database.
+func GetAllOwnersFromDatabase() ([]Owner, error) {
+	rows, err := DB.Query("SELECT * FROM owner;")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	owners := make([]Owner, 0)
+	for rows.Next() {
+		owner := new(Owner)
+		err := rows.Scan(&owner.ID, &owner.Name)
+		if err != nil {
+			return nil, err
+		}
+		owners = append(owners, *owner)
+	}
+	return owners, nil
+}

@@ -147,3 +147,19 @@ func deleteTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Delete tea type with ID: %d\n", id)
 	respondWithJSON(w, http.StatusOK, map[string]string{"name": teaType.Name, "result": "success"})
 }
+
+// GetAllOwnersFunc points to a function to get all owners in the database. Useful for mocking.
+var GetAllOwnersFunc = GetAllOwnersFromDatabase
+
+func getAllOwnersHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(`Received request "GET /owners"`)
+
+	owners, err := GetAllOwnersFunc()
+	if err != nil {
+		log.Printf("Error retrieving all owners: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Println("Successfully handled request to see all owners")
+	respondWithJSON(w, http.StatusOK, owners)
+}
