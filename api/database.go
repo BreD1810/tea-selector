@@ -163,12 +163,12 @@ func GetTeaTypeFromDatabase(teaType *TeaType) error {
 
 // CreateTeaTypeInDatabase adds a new tea type to the database
 func CreateTeaTypeInDatabase(teaType *TeaType) error {
-	_, err := DB.Exec("INSERT INTO types (name) VALUES ('$1');", teaType.Name)
+	_, err := DB.Exec("INSERT INTO types (name) VALUES ($1);", teaType.Name)
 	if err != nil {
 		return err
 	}
 
-	rows, err := DB.Query("SELECT ID FROM types WHERE name = ('$1');", teaType.Name)
+	rows, err := DB.Query("SELECT ID FROM types WHERE name = ($1);", teaType.Name)
 	if err != nil {
 		return err
 	}
@@ -233,12 +233,12 @@ func GetOwnerFromDatabase(owner *Owner) error {
 
 // CreateOwnerInDatabase adds a new owner to the database
 func CreateOwnerInDatabase(owner *Owner) error {
-	_, err := DB.Exec("INSERT INTO owner (name) VALUES ('$1');", owner.Name)
+	_, err := DB.Exec("INSERT INTO owner (name) VALUES ($1);", owner.Name)
 	if err != nil {
 		return err
 	}
 
-	rows, err := DB.Query("SELECT ID FROM owner WHERE name = ('$1');", owner.Name)
+	rows, err := DB.Query("SELECT ID FROM owner WHERE name = ($1);", owner.Name)
 	if err != nil {
 		return err
 	}
