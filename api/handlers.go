@@ -319,3 +319,33 @@ func createTeaHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Created new tea. ID: %d, Name: %q, Type: %q\n", tea.ID, tea.Name, tea.TeaType.Name)
 	respondWithJSON(w, http.StatusCreated, tea)
 }
+
+// DeleteTeaFunc points to a function to delete a tea from the database. Useful for mocking.
+var DeleteTeaFunc = DeleteTeaFromDatabase
+
+func deleteTeaHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Printf("Failed to delete tea with ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusBadRequest, "Invalid tea ID")
+		return
+	}
+	log.Printf("Received request \"DELETE /tea/%d\"\n", id)
+
+	tea := Tea{ID: id}
+
+	if err := DeleteTeaFunc(&tea); err != nil {
+		if err.Error() == "sql: Rows are closed" {
+			log.Printf("Failed to delete tea as ID didn't exist. ID: %d\n", id)
+			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")
+			return
+		}
+		log.Printf("Failed to delete tea with ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Deleted tea with ID: %d\n", id)
+	respondWithJSON(w, http.StatusOK, map[string]string{"name": tea.Name, "result": "success"})
+}

@@ -324,3 +324,18 @@ func CreateTeaInDatabase(tea *Tea) error {
 
 	return nil
 }
+
+// DeleteTeaFromDatabase deletes a tea from the database using it's ID.
+func DeleteTeaFromDatabase(tea *Tea) error {
+	rows, err := DB.Query("SELECT name FROM tea WHERE id=$1;", tea.ID)
+
+	rows.Next()
+	err = rows.Scan(&tea.Name)
+	if err != nil {
+		return err
+	}
+	rows.Close()
+
+	_, err = DB.Exec("DELETE FROM tea WHERE id = $1;", tea.ID)
+	return err
+}
