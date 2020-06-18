@@ -361,3 +361,63 @@ func TestGetAllOwnersFromDatabase(t *testing.T) {
 		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
+
+func TestGetOwnerFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	expected := "John"
+	rows := mock.NewRows([]string{"name"})
+	rows.AddRow(expected)
+	owner := Owner{ID: 1}
+
+	mock.ExpectQuery("SELECT name FROM owner").WithArgs(1).WillReturnRows(rows)
+
+	err = GetOwnerFromDatabase(&owner)
+	if err != nil {
+
+	}
+	if owner.Name != expected {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", owner.Name, expected)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
+
+func TestGetNonExistentOwnerFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	expected := ""
+	rows := mock.NewRows([]string{"name"})
+	rows.AddRow(expected)
+	owner := Owner{ID: 1}
+
+	mock.ExpectQuery("SELECT name FROM owner").WithArgs(1).WillReturnError(sql.ErrNoRows)
+
+	err = GetOwnerFromDatabase(&owner)
+	if err != sql.ErrNoRows {
+		t.Errorf("Method returned unexpected error:\n got: %v\n wanted: %v\n", err, sql.ErrNoRows)
+	}
+	if owner.Name != expected {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", owner.Name, expected)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}

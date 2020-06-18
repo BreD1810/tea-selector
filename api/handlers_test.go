@@ -262,3 +262,68 @@ func allTeaOwnersResponseMock() ([]Owner, error) {
 	owner2 := Owner{ID: 2, Name: "Jane"}
 	return []Owner{owner1, owner2}, nil
 }
+
+func TestGetOwnerHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/owner", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := GetOwnerFunc
+	defer func() { GetOwnerFunc = oldFunc }()
+	GetOwnerFunc = getOwnerResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("GET /owner/1 returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `{"id":1,"name":"John"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /owner/1 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func getOwnerResponseMock(owner *Owner) error {
+	owner.Name = "John"
+	return nil
+}
+
+func TestGetOwnerHandlerError(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/owner", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "10"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := GetOwnerFunc
+	defer func() { GetOwnerFunc = oldFunc }()
+	GetOwnerFunc = getHandlerErrorResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("GET /type/10 returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"ID does not exist in database"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /type/10 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func getHandlerErrorResponseMock(owner *Owner) error {
+	return sql.ErrNoRows
+}
