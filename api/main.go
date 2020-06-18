@@ -23,6 +23,7 @@ func main() {
 	router.HandleFunc("/owners", getAllOwnersHandler).Methods(http.MethodGet)
 	router.HandleFunc("/owner/{id:[0-9]+}", getOwnerHandler).Methods(http.MethodGet)
 	router.HandleFunc("/owner", createOwnerHandler).Methods(http.MethodPost)
+	router.HandleFunc("/owner/{id:[0-9]+}", deleteOwnerHandler).Methods(http.MethodDelete)
 
 	addr := ":" + cfg.Server.Port
 	log.Fatal(http.ListenAndServe(addr, router))

@@ -253,3 +253,18 @@ func CreateOwnerInDatabase(owner *Owner) error {
 
 	return nil
 }
+
+// DeleteOwnerFromDatabase deletes an owner from the database.
+func DeleteOwnerFromDatabase(owner *Owner) error {
+	rows, err := DB.Query("SELECT name FROM owner WHERE id=$1;", owner.ID)
+
+	rows.Next()
+	err = rows.Scan(&owner.Name)
+	if err != nil {
+		return err
+	}
+	rows.Close()
+
+	_, err = DB.Exec("DELETE FROM owner WHERE id = $1;", owner.ID)
+	return err
+}

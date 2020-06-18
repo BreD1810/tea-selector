@@ -218,3 +218,33 @@ func createOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Created new owner. ID: %d, Name: %s\n", owner.ID, owner.Name)
 	respondWithJSON(w, http.StatusCreated, owner)
 }
+
+// DeleteOwnerFunc points to a function to delete an owner from the database. Useful for mocking.
+var DeleteOwnerFunc = DeleteOwnerFromDatabase
+
+func deleteOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Printf("Failed to delete owner with ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusBadRequest, "Invalid owner ID")
+		return
+	}
+	log.Printf("Received request \"DELETE /owner/%d\"\n", id)
+
+	owner := Owner{ID: id}
+
+	if err := DeleteOwnerFunc(&owner); err != nil {
+		if err.Error() == "sql: Rows are closed" {
+			log.Printf("Failed to delete owner as ID didn't exist. ID: %d\n", id)
+			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")
+			return
+		}
+		log.Printf("Failed to delete owner with ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Deleted owner with ID: %d\n", id)
+	respondWithJSON(w, http.StatusOK, map[string]string{"name": owner.Name, "result": "success"})
+}
