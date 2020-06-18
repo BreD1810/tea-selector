@@ -878,3 +878,75 @@ func TestGetNonExistentTeaOwnerFromDatabase(t *testing.T) {
 		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
+
+func TestCreateTeaOwnerFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaID := 1
+	owner := Owner{ID: 1}
+
+	mock.ExpectExec("INSERT INTO teaOwners").WithArgs(teaID, owner.ID).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	if err := CreateTeaOwnerInDatabase(teaID, &owner); err != nil {
+		t.Errorf("Database returned unexpected error: %v\n", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
+
+func TestCreateTeaOwnerFromDatabaseRelationshipExists(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaID := 1
+	owner := Owner{ID: 1}
+
+	mock.ExpectExec("INSERT INTO teaOwners").WithArgs(teaID, owner.ID).WillReturnError(errors.New("UNIQUE constraint failed"))
+
+	if err := CreateTeaOwnerInDatabase(teaID, &owner); err.Error() != "This relationship already exists" {
+		t.Errorf("Database returned unexpected error: %v\n", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
+
+func TestCreateTeaOwnerFromDatabaseDoesntExists(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaID := 1
+	owner := Owner{ID: 1}
+
+	mock.ExpectExec("INSERT INTO teaOwners").WithArgs(teaID, owner.ID).WillReturnError(errors.New("FOREIGN KEY constraint failed"))
+
+	if err := CreateTeaOwnerInDatabase(teaID, &owner); err.Error() != "Either the tea or owner ID do not exist in the database" {
+		t.Errorf("Database returned unexpected error: %q\n", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}

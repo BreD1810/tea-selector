@@ -781,3 +781,67 @@ func getAllTeaOwnersResponseMock() ([]TeaWithOwners, error) {
 	teaWithOwners3 := TeaWithOwners{Tea: tea3, Owners: []Owner{}}
 	return []TeaWithOwners{teaWithOwners1, teaWithOwners2, teaWithOwners3}, nil
 }
+
+func TestCreateTeaOwnerHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodPost, "/tea/1/owner", strings.NewReader(`{"id": 1}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := CreateTeaOwnerFunc
+	defer func() { CreateTeaOwnerFunc = oldFunc }()
+	CreateTeaOwnerFunc = createTeaOwnerResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(createTeaOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusCreated {
+		t.Errorf("POST /tea/{id}/owner returned wrong status code:\n got: %v\n want: %v", status, http.StatusCreated)
+	}
+
+	expected := `{"result":"success"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("POST /tea/{id}/owner returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func createTeaOwnerResponseMock(teaID int, owner *Owner) error {
+	return nil
+}
+
+func TestCreateTeaOwnerErrorHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodPost, "/tea/10/owner", strings.NewReader(`{"id": 10}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "10"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := CreateTeaOwnerFunc
+	defer func() { CreateTeaOwnerFunc = oldFunc }()
+	CreateTeaOwnerFunc = createTeaOwnerResponseErrorMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(createTeaOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("POST /tea/{id}/owner returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"Error"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("POST /tea/{id}/owner returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func createTeaOwnerResponseErrorMock(teaID int, owner *Owner) error {
+	return errors.New("Error")
+}
