@@ -230,3 +230,26 @@ func GetOwnerFromDatabase(owner *Owner) error {
 
 	return nil
 }
+
+// CreateOwnerInDatabase adds a new owner to the database
+func CreateOwnerInDatabase(owner *Owner) error {
+	_, err := DB.Exec("INSERT INTO owner (name) VALUES ('$1');", owner.Name)
+	if err != nil {
+		return err
+	}
+
+	rows, err := DB.Query("SELECT ID FROM owner WHERE name = ('$1');", owner.Name)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	rows.Next()
+	err = rows.Scan(&owner.ID)
+	if err != nil {
+		return err
+	}
+	log.Printf("New ID: %d\n", owner.ID)
+
+	return nil
+}

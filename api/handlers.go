@@ -193,3 +193,28 @@ func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Got owner with ID: %d\n", id)
 	respondWithJSON(w, http.StatusOK, owner)
 }
+
+// CreateOwnerFunc points to a function that creates an owner in the database. Useful for mocking.
+var CreateOwnerFunc = CreateOwnerInDatabase
+
+func createOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(`Received request "POST /owner"`)
+
+	var owner Owner
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&owner); err != nil {
+		log.Printf("Failed to create new owner: %s\n", owner.Name)
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+
+	if err := CreateOwnerFunc(&owner); err != nil {
+		log.Printf("Error creating owner: %s\n\t Error: %s\n", owner.Name, err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Created new owner. ID: %d, Name: %s\n", owner.ID, owner.Name)
+	respondWithJSON(w, http.StatusCreated, owner)
+}
