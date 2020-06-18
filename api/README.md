@@ -19,6 +19,8 @@ The `config.yml` file gives an example configuration. This can be changed to you
 - Set the database location
 - Set the default tea types and owners.
 
+Additionally, `tea-store.sql` is included to setup an example database. To use it, run `sqlite3 tea-store.db`, and then `.read tea-store.sql`.
+
 ## Interacting with the API
 By default, the API will be running on `localhost:7344`.
 
