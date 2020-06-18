@@ -421,3 +421,36 @@ func TestGetNonExistentOwnerFromDatabase(t *testing.T) {
 		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
+
+func TestCreateOwnerInDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	ownerName := "John"
+	rows := mock.NewRows([]string{"id"})
+	rows.AddRow("1")
+	mock.ExpectExec("INSERT INTO owner").WithArgs(ownerName).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectQuery("SELECT ID FROM owner").WillReturnRows(rows)
+
+	owner := Owner{ID: 1, Name: ownerName}
+	err = CreateOwnerInDatabase(&owner)
+	if err != nil {
+		t.Errorf("Error whilst trying to insert tea type into database: %v\n", err)
+	}
+	if owner.ID != 1 {
+		t.Errorf("Tea type ID not updated:\n Got: %d\n Expected: %v\n", owner.ID, 1)
+	}
+	if owner.Name != ownerName {
+		t.Errorf("Tea type Name not as expected:\n Got: %q\n Expected: %q\n", owner.Name, ownerName)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}

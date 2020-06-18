@@ -124,12 +124,12 @@ func TestCreateTeaTypeHandler(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusCreated {
-		t.Errorf("PUT /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusCreated)
+		t.Errorf("POST /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusCreated)
 	}
 
 	expected := `{"id":10,"name":"Black Tea"}`
 	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("PUT /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		t.Errorf("POST /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
 	}
 }
 
@@ -154,12 +154,12 @@ func TestErrorCreateTeaTypeHandler(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("PUT /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+		t.Errorf("POST /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
 	}
 
 	expected := `{"error":"Error"}`
 	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("PUT /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		t.Errorf("POST /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
 	}
 }
 
@@ -326,4 +326,63 @@ func TestGetOwnerHandlerError(t *testing.T) {
 
 func getHandlerErrorResponseMock(owner *Owner) error {
 	return sql.ErrNoRows
+}
+
+func TestCreateOwnerHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodPost, "/owner", strings.NewReader(`{"name": "John"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock the response from the database
+	oldFunc := CreateOwnerFunc
+	defer func() { CreateOwnerFunc = oldFunc }()
+	CreateOwnerFunc = createOwnerResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(createOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusCreated {
+		t.Errorf("POST /owner returned wrong status code:\n got: %v\n want: %v", status, http.StatusCreated)
+	}
+
+	expected := `{"id":10,"name":"John"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("POST /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func createOwnerResponseMock(owner *Owner) error {
+	owner.ID = 10
+	return nil
+}
+
+func TestErrorCreateOwnerHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodPost, "/owner", strings.NewReader(`{"name": "John"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock the response from the database
+	oldFunc := CreateOwnerFunc
+	defer func() { CreateOwnerFunc = oldFunc }()
+	CreateOwnerFunc = createOwnerResponseErrorMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(createOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("POST /owner returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"Error"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("POST /owner returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func createOwnerResponseErrorMock(owner *Owner) error {
+	return errors.New("Error")
 }
