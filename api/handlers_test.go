@@ -674,3 +674,69 @@ func TestDeleteTeaErrorHandler(t *testing.T) {
 func deleteTeaResponseErrorMock(tea *Tea) error {
 	return errors.New("sql: Rows are closed")
 }
+
+func TestGetTeaOwnersHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/tea/1/owners", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := GetTeaOwnersFunc
+	defer func() { GetTeaOwnersFunc = oldFunc }()
+	GetTeaOwnersFunc = getTeaOwnersResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getTeaOwnersHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("GET /tea/{id}/owners returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `[{"id":1,"name":"John"},{"id":2,"name":"Jane"}]`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /tea/{id}/owners returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func getTeaOwnersResponseMock(tea *Tea) ([]Owner, error) {
+	owner1 := Owner{ID: 1, Name: "John"}
+	owner2 := Owner{ID: 2, Name: "Jane"}
+	return []Owner{owner1, owner2}, nil
+}
+
+func TestGetTeaOwnersErrorHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/tea/10/owners", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "10"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := GetTeaOwnersFunc
+	defer func() { GetTeaOwnersFunc = oldFunc }()
+	GetTeaOwnersFunc = getTeaOwnersErrorResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getTeaOwnersHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("GET /tea/{id}/owners returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"Error"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /tea/{id}/owners returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func getTeaOwnersErrorResponseMock(tea *Tea) ([]Owner, error) {
+	return nil, errors.New("Error")
+}
