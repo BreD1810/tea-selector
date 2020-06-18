@@ -240,7 +240,7 @@ func TestCreateTeaTypeInDatabase(t *testing.T) {
 	teaName := "Black Tea"
 	rows := mock.NewRows([]string{"id"})
 	rows.AddRow("1")
-	mock.ExpectExec("INSERT INTO types \\(name\\) VALUES \\('" + teaName + "'\\)").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT INTO types").WithArgs("Black Tea").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectQuery("SELECT ID FROM types").WillReturnRows(rows)
 
 	teaType := TeaType{ID: 1, Name: teaName}

@@ -163,12 +163,12 @@ func GetTeaTypeFromDatabase(teaType *TeaType) error {
 
 // CreateTeaTypeInDatabase adds a new tea type to the database
 func CreateTeaTypeInDatabase(teaType *TeaType) error {
-	_, err := DB.Exec("INSERT INTO types (name) VALUES ('" + teaType.Name + "');")
+	_, err := DB.Exec("INSERT INTO types (name) VALUES ('$1');", teaType.Name)
 	if err != nil {
 		return err
 	}
 
-	rows, err := DB.Query("SELECT ID FROM types WHERE name = ('" + teaType.Name + "');")
+	rows, err := DB.Query("SELECT ID FROM types WHERE name = ('$1');", teaType.Name)
 	if err != nil {
 		return err
 	}
