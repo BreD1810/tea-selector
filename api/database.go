@@ -78,7 +78,7 @@ func createTeaTypeTable(types []string) {
 func createTeaTable() {
 	creationString := `CREATE TABLE tea (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
-							name TEXT NOT NULL,
+							name TEXT NOT NULL UNIQUE,
 							teaType INTEGER,
 							FOREIGN KEY (teaType) REFERENCES types (id)
 								ON UPDATE CASCADE
@@ -91,7 +91,7 @@ func createTeaTable() {
 func createOwnerTable(owners []string) {
 	creationString := `CREATE TABLE owner (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
-							name TEXT NOT NULL
+							name TEXT NOT NULL UNIQUE
 					   );`
 	_, err := DB.Exec(creationString)
 	checkError("creating owner table", err)
