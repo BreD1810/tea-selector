@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -60,6 +61,35 @@ func getAllTeaTypesHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, types)
 }
 
+// GetTeaTypeFunc points to the function to get information about a tea type. Useful for mocking.
+var GetTeaTypeFunc = GetTeaTypeFromDatabase
+
+func getTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Printf("Failed to get tea type with ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusBadRequest, "Invalid Tea Type ID")
+		return
+	}
+
+	teaType := TeaType{ID: id}
+
+	if err := GetTeaTypeFunc(&teaType); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Failed to get tea type as ID didn't exist. ID: %d\n", id)
+			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")
+			return
+		}
+		log.Printf("Failed to get tea type with id: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Got tea with type with ID: %d\n", id)
+	respondWithJSON(w, http.StatusOK, teaType)
+}
+
 // CreateTeaTypeFunc points to the function to create a new type of tea in the database. Useful for mocking.
 var CreateTeaTypeFunc = CreateTeaTypeInDatabase
 
@@ -104,7 +134,7 @@ func deleteTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("Failed to delete tea type with ID: %d\n Error: %v\n", id, err)
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

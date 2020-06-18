@@ -149,6 +149,18 @@ func GetAllTeaTypesFromDatabase() ([]TeaType, error) {
 	return teaTypes, nil
 }
 
+// GetTeaTypeFromDatabase retrieves a tea type from the database.
+func GetTeaTypeFromDatabase(teaType *TeaType) error {
+	row := DB.QueryRow("SELECT name FROM types WHERE id=$1;", teaType.ID)
+
+	err := row.Scan(&teaType.Name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // CreateTeaTypeInDatabase adds a new tea type to the database
 func CreateTeaTypeInDatabase(teaType *TeaType) error {
 	_, err := DB.Exec("INSERT INTO types (name) VALUES ('" + teaType.Name + "');")
