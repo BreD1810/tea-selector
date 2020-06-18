@@ -386,3 +386,68 @@ func TestErrorCreateOwnerHandler(t *testing.T) {
 func createOwnerResponseErrorMock(owner *Owner) error {
 	return errors.New("Error")
 }
+
+func TestDeleteOwnerHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodDelete, "/owner", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := DeleteOwnerFunc
+	defer func() { DeleteOwnerFunc = oldFunc }()
+	DeleteOwnerFunc = deleteOwnerResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(deleteOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("DELETE /owner returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `{"name":"John","result":"success"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("DELETE /owner returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func deleteOwnerResponseMock(owner *Owner) error {
+	owner.Name = "John"
+	return nil
+}
+
+func TestDeleteOwnerErrorHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodDelete, "/owner", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := DeleteOwnerFunc
+	defer func() { DeleteOwnerFunc = oldFunc }()
+	DeleteOwnerFunc = deleteOwnerResponseErrorMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(deleteOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("DELETE /owner returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"ID does not exist in database"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("DELETE /owner returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func deleteOwnerResponseErrorMock(owner *Owner) error {
+	return errors.New("sql: Rows are closed")
+}

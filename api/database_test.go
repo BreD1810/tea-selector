@@ -454,3 +454,71 @@ func TestCreateOwnerInDatabase(t *testing.T) {
 		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
+
+func TestDeleteOwnerFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	ownerName := "John"
+	ownerID := 1
+	rows := mock.NewRows([]string{"name"})
+	rows.AddRow(ownerName)
+
+	mock.ExpectQuery("SELECT name FROM owner").WithArgs(1).WillReturnRows(rows)
+	mock.ExpectExec("DELETE FROM owner").WithArgs(1).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	owner := Owner{ID: ownerID}
+	err = DeleteOwnerFromDatabase(&owner)
+	if err != nil {
+		t.Errorf("Error whilst trying to delete owner from database: %v\n", err)
+	}
+	if owner.ID != ownerID {
+		t.Errorf("Owner ID changed:\n Got: %d\n Expected: %v\n", owner.ID, ownerID)
+	}
+	if owner.Name != ownerName {
+		t.Errorf("Owner Name not as expected:\n Got: %q\n Expected: %q\n", owner.Name, ownerName)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n\n", err)
+	}
+}
+
+func TestDeleteNonExistantOwnerFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	// teaName := "Black Tea"
+	ownerID := 1
+	rows := mock.NewRows([]string{"name"})
+
+	mock.ExpectQuery("SELECT name FROM owner").WithArgs(1).WillReturnRows(rows)
+
+	owner := Owner{ID: ownerID}
+	err = DeleteOwnerFromDatabase(&owner)
+	if err.Error() != "sql: Rows are closed" {
+		t.Errorf("Error whilst trying to delete owner from database: %v\n", err)
+	}
+	if owner.ID != ownerID {
+		t.Errorf("Owner ID changed:\n Got: %d\n Expected: %v\n", owner.ID, ownerID)
+	}
+	if owner.Name != "" {
+		t.Errorf("Owner Name was unexpectedly updated:\n Got: %q\n Expected: \"\"\n", owner.Name)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
