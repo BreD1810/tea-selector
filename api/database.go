@@ -119,6 +119,7 @@ func createTeaOwnersTable() {
 	creationString := `CREATE TABLE teaOwners (
 							teaID INTEGER,
 							ownerID INTEGER,
+							PRIMARY KEY(teaID, ownerID),
 							FOREIGN KEY (teaID) REFERENCES tea (id)
 								ON UPDATE CASCADE
 								ON DELETE RESTRICT,
@@ -392,4 +393,20 @@ func GetAllTeaOwnersFromDatabase() ([]TeaWithOwners, error) {
 	}
 
 	return teasWithOwners, nil
+}
+
+// CreateTeaOwnerInDatabase adds an owner to a tea in the database.
+func CreateTeaOwnerInDatabase(teaID int, owner *Owner) error {
+	_, err := DB.Exec("INSERT INTO teaOwners VALUES ($1, $2);", teaID, owner.ID)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return errors.New("This relationship already exists")
+		}
+		if strings.Contains(err.Error(), "FOREIGN KEY constraint failed") {
+			return errors.New("Either the tea or owner ID do not exist in the database")
+		}
+		return err
+	}
+
+	return nil
 }

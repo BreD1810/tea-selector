@@ -396,3 +396,35 @@ func getAllTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Successfully handled request to see all teas with owners")
 	respondWithJSON(w, http.StatusOK, teasWithOwners)
 }
+
+// CreateTeaOwnerFunc points to a function to add an owner to a tea in the database. Useful for mocking.
+var CreateTeaOwnerFunc = CreateTeaOwnerInDatabase
+
+func createTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Printf("Failed to get owners of tea with ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusBadRequest, "Invalid tea ID")
+		return
+	}
+	log.Printf("Received request \"POST /tea/%d/owner\n\"", id)
+
+	var owner Owner
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&owner); err != nil {
+		log.Printf("Failed to create new owner of tea with ID: %d\n", id)
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+
+	if err := CreateTeaOwnerFunc(id, &owner); err != nil {
+		log.Printf("Error creating owner for tea with ID: %d\n\t Error: %s\n", id, err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Created new owner for tea. teaID: %d, ownerID: %d\n", id, owner.ID)
+	respondWithJSON(w, http.StatusCreated, map[string]string{"result": "success"})
+}
