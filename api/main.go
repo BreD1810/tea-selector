@@ -28,6 +28,7 @@ func main() {
 	// Tea
 	router.HandleFunc("/teas", getAllTeasHandler).Methods(http.MethodGet)
 	router.HandleFunc("/tea/{id:[0-9]+}", getTeaHandler).Methods(http.MethodGet)
+	router.HandleFunc("/tea", createTeaHandler).Methods(http.MethodPost)
 
 	addr := ":" + cfg.Server.Port
 	log.Fatal(http.ListenAndServe(addr, router))

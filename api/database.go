@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"os"
 	"strings"
@@ -297,6 +298,28 @@ func GetTeaFromDatabase(tea *Tea) error {
 	err := row.Scan(&tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// CreateTeaInDatabase creates a new tea in the database. Uses the type ID to do so.
+func CreateTeaInDatabase(tea *Tea) error {
+	row := DB.QueryRow("SELECT name FROM types WHERE id = $1;", tea.TeaType.ID)
+	err := row.Scan(&tea.TeaType.Name)
+	if err != nil {
+		return errors.New("Tea type does not exist or is missing")
+	}
+
+	_, err = DB.Exec("INSERT INTO tea (name, teaType) VALUES ($1, $2);", tea.Name, tea.TeaType.ID)
+	if err != nil {
+		return err
+	}
+
+	row = DB.QueryRow("SELECT id FROM tea WHERE name = $1;", tea.Name)
+	err = row.Scan(&tea.ID)
+	if err != nil {
+		return errors.New("Tea ID not found after insert")
 	}
 
 	return nil

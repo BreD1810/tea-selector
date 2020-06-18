@@ -294,3 +294,28 @@ func getTeaHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Got tea with ID: %d\n", id)
 	respondWithJSON(w, http.StatusOK, tea)
 }
+
+// CreateTeaFunc points to a function to create a tea in the database. Useful for mocking.
+var CreateTeaFunc = CreateTeaInDatabase
+
+func createTeaHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(`Received request "POST /tea"`)
+
+	var tea Tea
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&tea); err != nil {
+		log.Printf("Failed to create new tea: %s\n", tea.Name)
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+
+	if err := CreateTeaFunc(&tea); err != nil {
+		log.Printf("Error creating tea: %s\n\t Error: %s\n", tea.Name, err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Created new tea. ID: %d, Name: %q, Type: %q\n", tea.ID, tea.Name, tea.TeaType.Name)
+	respondWithJSON(w, http.StatusCreated, tea)
+}
