@@ -23,14 +23,23 @@ The `config.yml` file gives an example configuration. This can be changed to you
 By default, the API will be running on `localhost:7344`.
 
 ### Tea Types
-
-- To see all current tea types, send a GET request to `/types`.
+- To see all current tea types, send a GET request to `/types`
 - To get information about a tea type, send a GET request: `/type/{id}` 
-
-- To add a new tea type, send a POST request to `/type`. An example body is :
+- To add a new tea type, send a POST request to `/type`. An example body is:
 
         {
             "name": "Black Tea"
         }
 
 - To delete a tea type, send a DELETE request: `/type/{id}`
+
+### Owners
+- To see all current owners, send a GET request to `/owners`
+- To get information about an owner, send a GET request: `/owner/{id}`
+- To add a new owner, send a POST request to `/owner/`. An example body is:
+
+        {
+            "name": "John"
+        }
+
+- To delete an owner, send a DELETE request: `/owner/{id}`
