@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -148,25 +149,85 @@ func TestGetAllTeaTypesFromDatabase(t *testing.T) {
 
 	mock.ExpectQuery("SELECT \\* FROM types;").WillReturnRows(rows)
 
-	teaTypes, _ := GetAllTeaTypesFunc()
+	teaTypes, _ := GetAllTeaTypesFromDatabase()
 	expected := TeaType{1, "Black Tea"}
 	if teaTypes[0] != expected {
-		t.Errorf("Database returned unexpected result:\n got: %v\n wanted: %v", teaTypes[0], expected)
+		t.Errorf("Database returned unexpected result:\n got: %v\n wanted: %v\n", teaTypes[0], expected)
 	}
 	expected = TeaType{2, "Green Tea"}
 	if teaTypes[1] != expected {
-		t.Errorf("Database returned unexpected result:\n got: %v\n wanted: %v", teaTypes[1], expected)
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", teaTypes[1], expected)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("There were unfulfilled expectations: %s", err)
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
+
+func TestGetTeaTypeFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	expected := "Black Tea"
+	rows := mock.NewRows([]string{"name"})
+	rows.AddRow(expected)
+	teaType := TeaType{ID: 1}
+
+	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnRows(rows)
+
+	err = GetTeaTypeFromDatabase(&teaType)
+	if err != nil {
+
+	}
+	if teaType.Name != expected {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", teaType.Name, expected)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
+
+func TestGetNonExistantTeaTypeFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	expected := ""
+	rows := mock.NewRows([]string{"name"})
+	rows.AddRow(expected)
+	teaType := TeaType{ID: 1}
+
+	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnError(sql.ErrNoRows)
+
+	err = GetTeaTypeFromDatabase(&teaType)
+	if err != sql.ErrNoRows {
+		t.Errorf("Method returned unexpected error:\n got: %v\n wanted: %v\n", err, sql.ErrNoRows)
+	}
+	if teaType.Name != expected {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", teaType.Name, expected)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
 
 func TestCreateTeaTypeInDatabase(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("Error occurred setting up mock database: %v", err)
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
 	oldDB := DB
@@ -192,14 +253,14 @@ func TestCreateTeaTypeInDatabase(t *testing.T) {
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("There were unfulfilled expectations: %s", err)
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
 
 func TestDeleteTeaTypeInDatabase(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("Error occurred setting up mock database: %v", err)
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
 	oldDB := DB
@@ -215,7 +276,7 @@ func TestDeleteTeaTypeInDatabase(t *testing.T) {
 	mock.ExpectExec("DELETE FROM types").WithArgs(1).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	teaType := TeaType{ID: teaID}
-	err = DeleteTeaTypeFunc(&teaType)
+	err = DeleteTeaTypeInDatabase(&teaType)
 	if err != nil {
 		t.Errorf("Error whilst trying to delete tea type from database: %v\n", err)
 	}
@@ -227,14 +288,14 @@ func TestDeleteTeaTypeInDatabase(t *testing.T) {
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("There were unfulfilled expectations: %s", err)
+		t.Errorf("There were unfulfilled expectations: %s\n\n", err)
 	}
 }
 
 func TestDeleteNonExistantTeaTypeInDatabase(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("Error occurred setting up mock database: %v", err)
+		t.Fatalf("Error occurred setting up mock database: %v\n\n", err)
 	}
 	defer db.Close()
 	oldDB := DB
@@ -248,7 +309,7 @@ func TestDeleteNonExistantTeaTypeInDatabase(t *testing.T) {
 	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnRows(rows)
 
 	teaType := TeaType{ID: teaID}
-	err = DeleteTeaTypeFunc(&teaType)
+	err = DeleteTeaTypeInDatabase(&teaType)
 	if err.Error() != "sql: Rows are closed" {
 		t.Errorf("Error whilst trying to delete tea type from database: %v\n", err)
 	}
@@ -260,6 +321,6 @@ func TestDeleteNonExistantTeaTypeInDatabase(t *testing.T) {
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("There were unfulfilled expectations: %s", err)
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
