@@ -51,6 +51,8 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 var GetAllTeaTypesFunc = GetAllTeaTypesFromDatabase
 
 func getAllTeaTypesHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(`Received request "GET /types"`)
+
 	types, err := GetAllTeaTypesFunc()
 	if err != nil {
 		log.Printf("Error retrieving all tea types: %v\n", err)
@@ -72,6 +74,7 @@ func getTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Invalid Tea Type ID")
 		return
 	}
+	log.Printf("Received request \"GET /type/%d\"\n", id)
 
 	teaType := TeaType{ID: id}
 
@@ -94,6 +97,8 @@ func getTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 var CreateTeaTypeFunc = CreateTeaTypeInDatabase
 
 func createTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(`Received request "POST /type"`)
+
 	var teaType TeaType
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&teaType); err != nil {
@@ -124,6 +129,7 @@ func deleteTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Invalid Tea Type ID")
 		return
 	}
+	log.Printf("Received request \"DELETE /type/%d\"\n", id)
 
 	teaType := TeaType{ID: id}
 
