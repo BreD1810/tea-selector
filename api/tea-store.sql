@@ -15,6 +15,7 @@ CREATE TABLE owner ( id INTEGER PRIMARY KEY AUTOINCREMENT,
 
 CREATE TABLE teaOwners ( teaID INTEGER,
                          ownerID INTEGER,
+                         PRIMARY KEY(teaID, ownerID),
                          FOREIGN KEY (teaID) REFERENCES tea (id)
                             ON UPDATE CASCADE
                             ON DELETE RESTRICT,
