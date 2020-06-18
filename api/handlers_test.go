@@ -740,3 +740,44 @@ func TestGetTeaOwnersErrorHandler(t *testing.T) {
 func getTeaOwnersErrorResponseMock(tea *Tea) ([]Owner, error) {
 	return nil, errors.New("Error")
 }
+
+func TestGetAllTeaOwnersHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/tea/owners", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock the response from the database
+	oldFunc := GetAllTeaOwnersFunc
+	defer func() { GetAllTeaOwnersFunc = oldFunc }()
+	GetAllTeaOwnersFunc = getAllTeaOwnersResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getAllTeaOwnersHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("GET /tea/owners returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `[` +
+		`{"tea":{"id":1,"name":"Snowball","type":{"id":1,"name":"Black Tea"}},"owners":[{"id":1,"name":"John"}]},` +
+		`{"tea":{"id":2,"name":"Nearly Nirvana","type":{"id":2,"name":"White Tea"}},"owners":[{"id":1,"name":"John"},{"id":2,"name":"Jane"}]},` +
+		`{"tea":{"id":3,"name":"Earl Grey","type":{"id":1,"name":"Black Tea"}},"owners":[]}` +
+		`]`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /tea/owners returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func getAllTeaOwnersResponseMock() ([]TeaWithOwners, error) {
+	tea1 := Tea{1, "Snowball", TeaType{1, "Black Tea"}}
+	tea2 := Tea{2, "Nearly Nirvana", TeaType{2, "White Tea"}}
+	tea3 := Tea{3, "Earl Grey", TeaType{1, "Black Tea"}}
+	owner1 := Owner{1, "John"}
+	owner2 := Owner{2, "Jane"}
+	teaWithOwners1 := TeaWithOwners{tea1, []Owner{owner1}}
+	teaWithOwners2 := TeaWithOwners{tea2, []Owner{owner1, owner2}}
+	teaWithOwners3 := TeaWithOwners{Tea: tea3, Owners: []Owner{}}
+	return []TeaWithOwners{teaWithOwners1, teaWithOwners2, teaWithOwners3}, nil
+}
