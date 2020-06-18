@@ -522,3 +522,37 @@ func TestDeleteNonExistantOwnerFromDatabase(t *testing.T) {
 		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
+
+func TestGetAllTeasFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	rows := mock.NewRows([]string{"id", "name", "id", "name"})
+	rows.AddRow("1", "Snowball", "1", "Black Tea")
+	rows.AddRow("2", "Nearly Nirvana", "2", "White Tea")
+
+	mock.ExpectQuery("SELECT (.)+ FROM tea").WillReturnRows(rows)
+
+	teas, err := GetAllTeasFromDatabase()
+	if err != nil {
+		t.Errorf("Database returned unexpected error: %v\n", err)
+	}
+	expected := Tea{1, "Snowball", TeaType{1, "Black Tea"}}
+	if teas[0] != expected {
+		t.Errorf("Database returned unexpected result:\n got: %v\n wanted: %v\n", teas[0], expected)
+	}
+	expected = Tea{2, "Nearly Nirvana", TeaType{2, "White Tea"}}
+	if teas[1] != expected {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", teas[1], expected)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}

@@ -451,3 +451,34 @@ func TestDeleteOwnerErrorHandler(t *testing.T) {
 func deleteOwnerResponseErrorMock(owner *Owner) error {
 	return errors.New("sql: Rows are closed")
 }
+
+func TestGetAllTeasHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/teas", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock the response from the database
+	oldFunc := GetAllTeasFunc
+	defer func() { GetAllTeasFunc = oldFunc }()
+	GetAllTeasFunc = allTeasResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getAllTeasHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("GET /teas returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `[{"id":1,"name":"Snowball","type":{"id":1,"name":"Black Tea"}},{"id":2,"name":"Nearly Nirvana","type":{"id":2,"name":"White Tea"}}]`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /teas returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func allTeasResponseMock() ([]Tea, error) {
+	tea1 := Tea{ID: 1, Name: "Snowball", TeaType: TeaType{ID: 1, Name: "Black Tea"}}
+	tea2 := Tea{ID: 2, Name: "Nearly Nirvana", TeaType: TeaType{ID: 2, Name: "White Tea"}}
+	return []Tea{tea1, tea2}, nil
+}
