@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -20,7 +21,7 @@ func TestGetAllTeaTypesHandler(t *testing.T) {
 	// Mock the response from the database
 	oldFunc := GetAllTeaTypesFunc
 	defer func() { GetAllTeaTypesFunc = oldFunc }()
-	GetAllTeaTypesFunc = allTeaResponseMock
+	GetAllTeaTypesFunc = allTeaTypeResponseMock
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(getAllTeaTypesHandler)
@@ -36,10 +37,75 @@ func TestGetAllTeaTypesHandler(t *testing.T) {
 	}
 }
 
-func allTeaResponseMock() ([]TeaType, error) {
+func allTeaTypeResponseMock() ([]TeaType, error) {
 	tea1 := TeaType{ID: 1, Name: "Black Tea"}
 	tea2 := TeaType{ID: 2, Name: "Green Tea"}
 	return []TeaType{tea1, tea2}, nil
+}
+
+func TestGetTeaTypeHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/type", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := GetTeaTypeFunc
+	defer func() { GetTeaTypeFunc = oldFunc }()
+	GetTeaTypeFunc = getTeaTypeResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getTeaTypeHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("GET /type/1 returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `{"id":1,"name":"Black Tea"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /type/1 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func getTeaTypeResponseMock(teaType *TeaType) error {
+	teaType.Name = "Black Tea"
+	return nil
+}
+
+func TestGetTeaTypeHandlerError(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/type", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "10"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := GetTeaTypeFunc
+	defer func() { GetTeaTypeFunc = oldFunc }()
+	GetTeaTypeFunc = getTeaTypeErrorResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getTeaTypeHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("GET /type/10 returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"ID does not exist in database"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /type/10 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func getTeaTypeErrorResponseMock(teaType *TeaType) error {
+	return sql.ErrNoRows
 }
 
 func TestCreateTeaTypeHandler(t *testing.T) {
