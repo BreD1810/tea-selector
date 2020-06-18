@@ -289,3 +289,15 @@ func GetAllTeasFromDatabase() ([]Tea, error) {
 	}
 	return teas, nil
 }
+
+// GetTeaFromDatabase gets information about a tea from the database using it's ID
+func GetTeaFromDatabase(tea *Tea) error {
+	row := DB.QueryRow("SELECT tea.name, types.id, types.name FROM tea INNER JOIN types ON tea.teaType=types.id WHERE tea.teaType=$1", tea.ID)
+
+	err := row.Scan(&tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

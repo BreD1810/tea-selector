@@ -264,3 +264,33 @@ func getAllTeasHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Successfully handled request to see all teas")
 	respondWithJSON(w, http.StatusOK, teas)
 }
+
+// GetTeaFunc points to a function to get information about a tea from the database. Useful for mocking.
+var GetTeaFunc = GetTeaFromDatabase
+
+func getTeaHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Printf("Failed to get tea with ID: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusBadRequest, "Invalid tea ID")
+		return
+	}
+	log.Printf("Received request \"GET /tea/%d\"\n", id)
+
+	tea := Tea{ID: id}
+
+	if err := GetTeaFunc(&tea); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Failed to get tea as ID didn't exist. ID: %d\n", id)
+			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")
+			return
+		}
+		log.Printf("Failed to get tea with id: %d\n Error: %v\n", id, err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Got tea with ID: %d\n", id)
+	respondWithJSON(w, http.StatusOK, tea)
+}
