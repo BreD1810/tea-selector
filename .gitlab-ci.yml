@@ -10,13 +10,6 @@ cache:
 
 api_unit_tests:
     stage: test
-    only:
-        changes:
-            - api/**/*
-    except:
-        changes:
-            - api/README.md
-            - api/.gitignore
     image: golang
     before_script:
         - mkdir -p $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds
@@ -28,13 +21,6 @@ api_unit_tests:
 
 api_build:
     stage: build
-    only:
-        changes:
-            - api/**/*
-    except:
-        changes:
-            - api/README.md
-            - api/.gitignore
     image: golang
     before_script:
         - mkdir -p $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds
