@@ -25,6 +25,9 @@ func main() {
 	router.HandleFunc("/owner", createOwnerHandler).Methods(http.MethodPost)
 	router.HandleFunc("/owner/{id:[0-9]+}", deleteOwnerHandler).Methods(http.MethodDelete)
 
+	// Tea
+	router.HandleFunc("/teas", getAllTeasHandler).Methods(http.MethodGet)
+
 	addr := ":" + cfg.Server.Port
 	log.Fatal(http.ListenAndServe(addr, router))
 }

@@ -268,3 +268,24 @@ func DeleteOwnerFromDatabase(owner *Owner) error {
 	_, err = DB.Exec("DELETE FROM owner WHERE id = $1;", owner.ID)
 	return err
 }
+
+// GetAllTeasFromDatabase gets all the teas from the database.
+func GetAllTeasFromDatabase() ([]Tea, error) {
+	rows, err := DB.Query("SELECT tea.id, tea.name, types.id, types.name FROM tea INNER JOIN types ON types.ID = tea.teaType;")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	teas := make([]Tea, 0)
+	for rows.Next() {
+		tea := new(Tea)
+		err := rows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		teas = append(teas, *tea)
+	}
+	return teas, nil
+}
