@@ -549,3 +549,63 @@ func TestGetTeaHandlerError(t *testing.T) {
 func getTeaResponseErrorMock(tea *Tea) error {
 	return sql.ErrNoRows
 }
+
+func TestCreateTeaHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodPost, "/tea", strings.NewReader(`{"name": "Snowball","type":{"id":1}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock the response from the database
+	oldFunc := CreateTeaFunc
+	defer func() { CreateTeaFunc = oldFunc }()
+	CreateTeaFunc = createTeaResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(createTeaHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusCreated {
+		t.Errorf("POST /tea returned wrong status code:\n got: %v\n want: %v", status, http.StatusCreated)
+	}
+
+	expected := `{"id":1,"name":"Snowball","type":{"id":1,"name":"Black Tea"}}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("POST /tea returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func createTeaResponseMock(tea *Tea) error {
+	tea.ID = 1
+	tea.TeaType.Name = "Black Tea"
+	return nil
+}
+
+func TestErrorCreateTeaHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodPost, "/tea", strings.NewReader(`{"name": "Snowball"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mock the response from the database
+	oldFunc := CreateTeaFunc
+	defer func() { CreateTeaFunc = oldFunc }()
+	CreateTeaFunc = createTeaResponseErrorMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(createTeaHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("POST /tea returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"Error"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("POST /tea returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func createTeaResponseErrorMock(tea *Tea) error {
+	return errors.New("Error")
+}

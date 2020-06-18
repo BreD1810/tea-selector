@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -619,6 +620,125 @@ func TestGetNonExistentTeaFromDatabase(t *testing.T) {
 	}
 	if tea.ID != expectedTeaID {
 		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", tea.ID, expectedTeaID)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
+
+func TestCreateTeaInDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaID := 1
+	teaName := "Snowball"
+	typeID := 1
+	typeName := "Black Tea"
+	typeRows := mock.NewRows([]string{"name"})
+	typeRows.AddRow(typeName)
+	teaRows := mock.NewRows([]string{"id"})
+	teaRows.AddRow("1")
+
+	mock.ExpectQuery("SELECT name FROM types").WithArgs(typeID).WillReturnRows(typeRows)
+	mock.ExpectExec("INSERT INTO tea").WithArgs(teaName, typeID).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectQuery("SELECT id FROM tea").WillReturnRows(teaRows)
+
+	tea := Tea{Name: teaName, TeaType: TeaType{ID: typeID}}
+	err = CreateTeaInDatabase(&tea)
+	if err != nil {
+		t.Errorf("Error whilst trying to insert tea into database: %s\n", err)
+	}
+	if tea.ID != teaID {
+		t.Errorf("Tea ID unexpectedly updated:\n Got: %d\n Expected: %d\n", tea.ID, teaID)
+	}
+	if tea.Name != teaName {
+		t.Errorf("Tea Name not as expected:\n Got: %q\n Expected: %q\n", tea.Name, teaName)
+	}
+	if tea.TeaType.ID != typeID {
+		t.Errorf("teaType ID unexpectedly updated:\n Got: %d\n Expected: %d\n", tea.TeaType.ID, typeID)
+	}
+	if tea.TeaType.Name != typeName {
+		t.Errorf("teaName not as expected:\n Got: %s\n Expected: %s\n", tea.TeaType.Name, typeName)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
+
+func TestCreateTeaInDatabaseBadType(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaName := "Snowball"
+	teaTypeID := 1
+	expectedError := "Tea type does not exist or is missing"
+
+	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnError(sql.ErrNoRows)
+
+	tea := Tea{Name: teaName, TeaType: TeaType{ID: teaTypeID}}
+	err = CreateTeaInDatabase(&tea)
+	if err.Error() != expectedError {
+		t.Errorf("Wrong error returned:\n Got: %s\n Expected: %s\n", err, expectedError)
+	}
+	if tea.Name != teaName {
+		t.Errorf("Tea name unexpectedly updated:\n Got: %q\n Expected: %q\n", tea.Name, teaName)
+	}
+	if tea.TeaType.ID != teaTypeID {
+		t.Errorf("teaType ID unexpectedly updated:\n Got: %d\n Expected: %d\n", tea.TeaType.ID, teaTypeID)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
+
+func TestCreateTeaInDatabaseInsertError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	teaName := "Snowball"
+	teaTypeID := 1
+	typeName := "Black Tea"
+	typeRows := mock.NewRows([]string{"name"})
+	typeRows.AddRow(typeName)
+	expectedError := "UNIQUE constraint not met"
+
+	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnRows(typeRows)
+	mock.ExpectExec("INSERT INTO tea").WithArgs(teaName, teaTypeID).WillReturnError(errors.New(expectedError))
+
+	tea := Tea{Name: teaName, TeaType: TeaType{ID: teaTypeID}}
+	err = CreateTeaInDatabase(&tea)
+	if err.Error() != expectedError {
+		t.Errorf("Wrong error returned:\n Got: %s\n Expected: %s\n", err, expectedError)
+	}
+	if tea.Name != teaName {
+		t.Errorf("Tea name unexpectedly updated:\n Got: %q\n Expected: %q\n", tea.Name, teaName)
+	}
+	if tea.TeaType.ID != teaTypeID {
+		t.Errorf("teaType ID unexpectedly updated:\n Got: %d\n Expected: %d\n", tea.TeaType.ID, teaTypeID)
+	}
+	if tea.TeaType.Name != typeName {
+		t.Errorf("teaTypeName not correct:\n Got: %q\n Expected: %q\n", tea.TeaType.Name, typeName)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
