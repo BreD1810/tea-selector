@@ -556,3 +556,72 @@ func TestGetAllTeasFromDatabase(t *testing.T) {
 		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
+
+func TestGetTeaFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	expectedTeaID := 1
+	expectedTeaName := "Snowball"
+	expectedTypeID := 1
+	expectedTypeName := "Black Tea"
+	tea := Tea{ID: expectedTeaID}
+	rows := mock.NewRows([]string{"name", "id", "name"})
+	rows.AddRow(expectedTeaName, expectedTypeID, expectedTypeName)
+
+	mock.ExpectQuery("SELECT (.)+ FROM tea").WithArgs(1).WillReturnRows(rows)
+
+	err = GetTeaFromDatabase(&tea)
+	if err != nil {
+		t.Errorf("Database returned unexpected error: %v\n", err)
+	}
+	if tea.ID != expectedTeaID {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", tea.ID, expectedTeaID)
+	}
+	if tea.Name != expectedTeaName {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", tea.Name, expectedTeaName)
+	}
+	if tea.TeaType.ID != expectedTypeID {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", tea.TeaType.ID, expectedTypeID)
+	}
+	if tea.TeaType.Name != expectedTypeName {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", tea.TeaType.Name, expectedTypeName)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
+
+func TestGetNonExistentTeaFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	mock.ExpectQuery("SELECT (.)+ FROM tea").WithArgs(10).WillReturnError(sql.ErrNoRows)
+
+	expectedTeaID := 10
+	tea := Tea{ID: expectedTeaID}
+	err = GetTeaFromDatabase(&tea)
+	if err != sql.ErrNoRows {
+		t.Errorf("Method returned unexpected error:\n got: %v\n wanted: %v\n", err, sql.ErrNoRows)
+	}
+	if tea.ID != expectedTeaID {
+		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", tea.ID, expectedTeaID)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}

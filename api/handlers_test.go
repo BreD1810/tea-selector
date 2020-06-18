@@ -315,12 +315,12 @@ func TestGetOwnerHandlerError(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("GET /type/10 returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+		t.Errorf("GET /owner/10 returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
 	}
 
 	expected := `{"error":"ID does not exist in database"}`
 	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("GET /type/10 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		t.Errorf("GET /owner/10 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
 	}
 }
 
@@ -349,7 +349,7 @@ func TestCreateOwnerHandler(t *testing.T) {
 
 	expected := `{"id":10,"name":"John"}`
 	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("POST /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		t.Errorf("POST /owner returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
 	}
 }
 
@@ -481,4 +481,71 @@ func allTeasResponseMock() ([]Tea, error) {
 	tea1 := Tea{ID: 1, Name: "Snowball", TeaType: TeaType{ID: 1, Name: "Black Tea"}}
 	tea2 := Tea{ID: 2, Name: "Nearly Nirvana", TeaType: TeaType{ID: 2, Name: "White Tea"}}
 	return []Tea{tea1, tea2}, nil
+}
+
+func TestGetTeaHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/tea", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := GetTeaFunc
+	defer func() { GetTeaFunc = oldFunc }()
+	GetTeaFunc = getTeaResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getTeaHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("GET /tea/1 returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `{"id":1,"name":"Snowball","type":{"id":1,"name":"Black Tea"}}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /owner/1 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func getTeaResponseMock(tea *Tea) error {
+	tea.Name = "Snowball"
+	tea.TeaType.ID = 1
+	tea.TeaType.Name = "Black Tea"
+	return nil
+}
+
+func TestGetTeaHandlerError(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, "/tea", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"id": "10"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := GetTeaFunc
+	defer func() { GetTeaFunc = oldFunc }()
+	GetTeaFunc = getTeaResponseErrorMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getTeaHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("GET /tea/10 returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"ID does not exist in database"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("GET /tea/10 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func getTeaResponseErrorMock(tea *Tea) error {
+	return sql.ErrNoRows
 }
