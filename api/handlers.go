@@ -428,3 +428,40 @@ func createTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Created new owner for tea. teaID: %d, ownerID: %d\n", id, owner.ID)
 	respondWithJSON(w, http.StatusCreated, map[string]string{"result": "success"})
 }
+
+// DeleteTeaOwnerFunc points to a function to delete an owner from a tea in the database. Useful for mocking.
+var DeleteTeaOwnerFunc = DeleteTeaOwnerFromDatabase
+
+func deleteTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	teaID, err := strconv.Atoi(vars["teaID"])
+	if err != nil {
+		log.Printf("Failed to delete owner of tea with teaID: %d\n Error: %v\n", teaID, err)
+		respondWithError(w, http.StatusBadRequest, "Invalid tea ID")
+		return
+	}
+	ownerID, err := strconv.Atoi(vars["ownerID"])
+	if err != nil {
+		log.Printf("Failed to delete owner of tea with ownerID: %d\n Error: %v\n", ownerID, err)
+		respondWithError(w, http.StatusBadRequest, "Invalid owner ID")
+		return
+	}
+	log.Printf("Received request \"DELETE /tea/%d/owner/%d\"\n", teaID, ownerID)
+
+	tea := Tea{ID: teaID}
+	owner := Owner{ID: ownerID}
+
+	if err := DeleteTeaOwnerFunc(&tea, &owner); err != nil {
+		if err.Error() == "sql: Rows are closed" {
+			log.Println("Failed to delete tea owner as relationship doesn't exist")
+			respondWithError(w, http.StatusInternalServerError, "Relationship does not exist in database")
+			return
+		}
+		log.Printf("Failed to delete tea owner. Error: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("Deleted tea own. teaID: %d \t ownerID: %d\n", teaID, ownerID)
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}

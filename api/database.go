@@ -410,3 +410,9 @@ func CreateTeaOwnerInDatabase(teaID int, owner *Owner) error {
 
 	return nil
 }
+
+// DeleteTeaOwnerFromDatabase deletes an owner of a tea from the database.
+func DeleteTeaOwnerFromDatabase(tea *Tea, owner *Owner) error {
+	_, err := DB.Exec("DELETE FROM teaOwners WHERE teaID = $1 AND ownerID = $2;", tea.ID, owner.ID)
+	return err
+}
