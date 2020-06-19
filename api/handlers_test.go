@@ -610,7 +610,7 @@ func createTeaResponseErrorMock(tea *Tea) error {
 	return errors.New("Error")
 }
 
-func TestDeleteTEaHandler(t *testing.T) {
+func TestDeleteTeaHandler(t *testing.T) {
 	req, err := http.NewRequest(http.MethodDelete, "/tea", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -844,4 +844,68 @@ func TestCreateTeaOwnerErrorHandler(t *testing.T) {
 
 func createTeaOwnerResponseErrorMock(teaID int, owner *Owner) error {
 	return errors.New("Error")
+}
+
+func TestDeleteTeaOwnerHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodDelete, "/tea/1/owner/1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"teaID": "1", "ownerID": "1"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := DeleteTeaOwnerFunc
+	defer func() { DeleteTeaOwnerFunc = oldFunc }()
+	DeleteTeaOwnerFunc = deleteTeaOwnerResponseMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(deleteTeaOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("DELETE /tea/{id}/owner/{id} returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+	}
+
+	expected := `{"result":"success"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("DELETE /tea/{id}/owner{id} returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func deleteTeaOwnerResponseMock(tea *Tea, owner *Owner) error {
+	return nil
+}
+
+func TestDeleteTeaOwnerErrorHandler(t *testing.T) {
+	req, err := http.NewRequest(http.MethodDelete, "/tea/10/owner/10", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vars := map[string]string{"teaID": "10", "ownerID": "10"}
+	req = mux.SetURLVars(req, vars)
+
+	// Mock the response from the database
+	oldFunc := DeleteTeaOwnerFunc
+	defer func() { DeleteTeaOwnerFunc = oldFunc }()
+	DeleteTeaOwnerFunc = deleteTeaOwnerResponseErrorMock
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(deleteTeaOwnerHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("DELETE /tea/{id}/owner/{id} returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+	}
+
+	expected := `{"error":"Relationship does not exist in database"}`
+	if actual := rr.Body.String(); actual != expected {
+		t.Errorf("DELETE /tea/{id}/owner/{id} returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+	}
+}
+
+func deleteTeaOwnerResponseErrorMock(tea *Tea, owner *Owner) error {
+	return errors.New("sql: Rows are closed")
 }

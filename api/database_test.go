@@ -950,3 +950,53 @@ func TestCreateTeaOwnerFromDatabaseDoesntExists(t *testing.T) {
 		t.Errorf("There were unfulfilled expectations: %s\n", err)
 	}
 }
+
+func TestDeleteTeaOwnerFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	tea := Tea{ID: 1}
+	owner := Owner{ID: 1}
+
+	mock.ExpectExec("DELETE FROM tea").WithArgs(tea.ID, owner.ID).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err = DeleteTeaOwnerFromDatabase(&tea, &owner)
+	if err != nil {
+		t.Errorf("Unexpected error whilst trying to delete tea owner from database: %v\n", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n\n", err)
+	}
+}
+
+func TestDeleteNonExistantTeaOwnerFromDatabase(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Error occurred setting up mock database: %v\n\n", err)
+	}
+	defer db.Close()
+	oldDB := DB
+	defer func() { DB = oldDB }()
+	DB = db
+
+	tea := Tea{ID: 1}
+	owner := Owner{ID: 1}
+
+	mock.ExpectExec("DELETE FROM tea").WithArgs(tea.ID, owner.ID).WillReturnError(sql.ErrNoRows)
+
+	err = DeleteTeaOwnerFromDatabase(&tea, &owner)
+	if err != sql.ErrNoRows {
+		t.Errorf("Unexpected error whilst trying to delete tea from database: %v\n", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("There were unfulfilled expectations: %s\n", err)
+	}
+}
