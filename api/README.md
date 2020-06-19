@@ -59,3 +59,14 @@ By default, the API will be running on `localhost:7344`.
         }
 
 - To delete a tea, send a DELETE request to `/tea`
+
+### Tea Owners
+- To see all teas with all their owners, send a GET request to `/teas/owners/`
+- To see the owners for a specific tea, send a GET request: `/tea/{id}/owners`
+- To add an owner, send a POST request to `/tea/{id}/owner`. An example body is:
+
+        {
+            "id": 1
+        }
+
+- Tp delete an owner from a tea, send a DELETE request to `/tea/{teaID}/owner/{ownerID}`
