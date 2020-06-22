@@ -3,7 +3,6 @@ import {
   SafeAreaView,
   StyleSheet,
   View,
-  Text,
 } from 'react-native';
 import RandomSelector from './components/randomSelector';
 
@@ -25,26 +24,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: '600',
     color: 'black',
+    alignSelf: 'center'
   },
   sectionDescription: {
     marginTop: 8,
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '400',
     color: 'black',
+    alignSelf: 'center'
   },
-  highlight: {
-    fontWeight: '700',
+  button: {
+    fontSize: 20,
+    color: 'white',
   },
-  footer: {
-    color: 'black',
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
+  buttonContainer: {
+    padding: 15,
+    marginTop: 20,
+    height: 60,
+    width: 200,
+    overflow: 'hidden',
+    borderRadius: 4,
+    backgroundColor: 'dodgerblue',
+    alignSelf: 'center'
   },
 });
 

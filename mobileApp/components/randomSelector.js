@@ -3,8 +3,9 @@ import React, { Component } from 'react';
 import {
   View,
   Text,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
+import Button from 'react-native-button';
 
 export default class RandomSelector extends React.Component {
 
@@ -13,21 +14,18 @@ export default class RandomSelector extends React.Component {
 
     this.state = {
       teas: [],
+      selectedTea: null,
       isLoading: true
     };
-    this.getAllTeas();
   }
 
-  getAllTeas() { 
-    // fetch('https://192.168.1.184:7344/teas', {
-    //   method: 'GET',
-    // })
-    console.log('FETCH')
+  componentDidMount() {
     fetch('http://192.168.1.184:7344/teas')
       .then((response) => response.json())
       .then((json) => {
         this.setState({ teas: json });
       })
+      .then(() => this.selectRandomTea())
       .catch((error) => console.error(error))
       .finally(() => {
         this.setState({ isLoading: false });
@@ -36,17 +34,22 @@ export default class RandomSelector extends React.Component {
 
   selectRandomTea() {
     const teas = this.state.teas;
-    const selectedTea = teas[Math.floor(Math.random()*teas.length)];
-    return <Text style={this.props.styles.sectionDescription}>{ selectedTea.name }</Text>
+    this.setState( {selectedTea: teas[Math.floor(Math.random()*teas.length)] });
   }
 
   render() {
       return (
           <View style={this.props.styles.sectionContainer}>
             <Text style={this.props.styles.sectionTitle}>The selected tea is:</Text>
-            {this.state.isLoading ? <ActivityIndicator/> : (
-              this.selectRandomTea()
+            {this.state.isLoading || this.state.selectedTea === null ? <ActivityIndicator/> : (
+              <Text style={this.props.styles.sectionDescription}>{ this.state.selectedTea.name }</Text>
             )}
+            <Button
+              onPress={() => this.selectRandomTea()}
+              containerStyle={ this.props.styles.buttonContainer }
+              style={this.props.styles.button }>
+              Select Another Tea
+            </Button>
           </View>
       );
   }
