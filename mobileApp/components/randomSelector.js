@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-
+import { serverURL } from '../app.json';
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ export default class RandomSelector extends React.Component {
   }
 
   componentDidMount() {
-    fetch('http://192.168.1.184:7344/teas')
+    fetch(serverURL + '/teas')
       .then((response) => response.json())
       .then((json) => {
         this.setState({ teas: json });
