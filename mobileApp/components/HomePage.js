@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import Button from 'react-native-button';
 
-const RandomSelector = (props) => {
+const HomePage = (props) => {
 
   const [teas, setTeas] = useState([]);
   const [selectedTea, setSelectedTea] = useState(0);
@@ -80,4 +80,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RandomSelector;
+export default HomePage;
