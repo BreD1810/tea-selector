@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import Button from 'react-native-button';
 
+
 const ManageButtons = ({ navigation }) => {
   return (
     <View style={styles.container}>
@@ -13,21 +14,21 @@ const ManageButtons = ({ navigation }) => {
       <Button
         style={styles.btn}
         containerStyle={styles.btnContainer}
-        onPress={() => navigation.navigate('Test2')}
+        onPress={() => navigation.navigate('TeaManager')}
       >
         Manage Teas
       </Button>
       <Button
         style={styles.btn}
         containerStyle={styles.btnContainer}
-        onPress={() => navigation.navigate('Test2')}
+        onPress={() => navigation.navigate('Temp')}
       >
         Manage Owners
       </Button>
       <Button
         style={styles.btnSmall}
         containerStyle={styles.btnContainerSmall}
-        onPress={() => navigation.navigate('Test2')}
+        onPress={() => navigation.navigate('Temp')}
       >
         Manage Ownership
       </Button>

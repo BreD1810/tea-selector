@@ -3,12 +3,13 @@ import {
   Text,
 } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
-import ManageButtons from './ManageButtons'
+import ManageButtons from './ManageButtons';
+import TeaManager from './TeaManager/TeaManager';
 
 const ManageStack = createStackNavigator();
 
-const Test2Component = () => {
-  return <Text>Manage</Text>
+const TempComponent = () => {
+  return <Text>Nothing here yet!</Text>
 }
 
 const ManageStackScreen = (props) => {
@@ -21,7 +22,14 @@ const ManageStackScreen = (props) => {
         name="Manage"
         component={ManageButtons} 
       />
-      <ManageStack.Screen name="Test2" component={Test2Component} />
+      <ManageStack.Screen 
+        name="TeaManager"
+        component={TeaManager}
+        options={{
+          headerTitle: "Manage Teas"
+        }}
+      />
+      <ManageStack.Screen name="Temp" component={TempComponent}/>
     </ManageStack.Navigator>
   );
 };
