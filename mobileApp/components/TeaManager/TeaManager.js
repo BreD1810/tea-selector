@@ -7,6 +7,7 @@ import {
   ToastAndroid,
 } from 'react-native';
 import TeaListItem from './TeaListItem';
+import AddTea from './AddTea';
 import {serverURL} from '../../app.json';
 
 const TeaManager = () => {
@@ -42,6 +43,50 @@ const TeaManager = () => {
       });
   };
 
+  const addTea = name => {
+    if (!name) {
+      Alert.alert('Error', 'Please enter a name for the new tea!');
+      return;
+    } else if (teas.some(tea => tea.name === name)){
+      Alert.alert('Error', 'That tea already exists!');
+      return;
+    }
+
+    addTeaAPI(name);
+  };
+
+  const addTeaAPI = name => {
+    fetch(serverURL + '/tea', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({name: name, type: {id: 1}}), // TODO: Add in type selected by the user.
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(response.json().error);
+        }
+        return response.json();
+      })
+      .then(json => {
+        setTeas(prevTeas => {
+          return [...prevTeas, {id: json.id, name}];
+        });
+        ToastAndroid.showWithGravityAndOffset(
+          'Tea successfully added!',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          0,
+          150,
+        );
+      })
+      .catch(error => {
+        console.warn(error);
+        Alert.alert('Error adding tea', 'Please try again.');
+      });
+  };
+
   useEffect(() => {
     fetch(serverURL + '/teas')
       .then(response => response.json())
@@ -67,6 +112,7 @@ const TeaManager = () => {
           keyExtractor={item => item.id.toString()}
         />
       )}
+      <AddTea addTea={addTea} />
     </View>
   );
 };
