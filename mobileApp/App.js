@@ -5,10 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/dist/FontAwesome5'
 import HomePage from './components/HomePage';
-
-const ManageComponent = () => {
-  return <Text>Manage</Text>
-}
+import ManagePage from './components/ManageStackScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -35,7 +32,7 @@ const App: () => React$Node = () => {
         }}
       >
       <Tab.Screen name="Home" component={HomePage} />
-      <Tab.Screen name="Manage" component={ManageComponent} />
+      <Tab.Screen name="Manage" component={ManagePage} />
       </Tab.Navigator>
     </NavigationContainer>
   );
