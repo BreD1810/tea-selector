@@ -4,7 +4,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import RandomSelector from './components/randomSelector';
+import RandomSelector from './components/RandomSelector';
 
 const App: () => React$Node = () => {
   return (
