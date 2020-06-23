@@ -58,7 +58,7 @@ By default, the API will be running on `localhost:7344`.
             }
         }
 
-- To delete a tea, send a DELETE request to `/tea`
+- To delete a tea, send a DELETE request to `/tea/{id}`
 
 ### Tea Owners
 - To see all teas with all their owners, send a GET request to `/teas/owners/`
