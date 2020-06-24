@@ -54,7 +54,7 @@ const TeaManager = () => {
       });
   };
 
-  const addTea = name => {
+  const addTea = (name, typeID, textInput) => {
     if (!name) {
       Alert.alert('Error', 'Please enter a name for the new tea!');
       return;
@@ -65,16 +65,16 @@ const TeaManager = () => {
       return;
     }
 
-    addTeaAPI(name);
+    addTeaAPI(name, typeID, textInput);
   };
 
-  const addTeaAPI = name => {
+  const addTeaAPI = (name, typeID, textInput) => {
     fetch(serverURL + '/tea', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({name: name, type: {id: 1}}), // TODO: Add in type selected by the user.
+      body: JSON.stringify({name: name, type: {id: typeID}}),
     })
       .then(response => {
         if (!response.ok) {
@@ -85,13 +85,9 @@ const TeaManager = () => {
       .then(json => {
         let newTeasByType = [...teasByType];
         let index = newTeasByType.findIndex(
-          teaType => teaType.title === 'Black Tea',
-        ); ///TODO: Add in type selected by user
-        if (index === -1) {
-          newTeasByType.push({title: 'Black Tea', data: [{id: json.id, name}]});
-        } else {
-          newTeasByType[index].data.push({id: json.id, name});
-        }
+          teaType => teaType.title.id === typeID,
+        );
+        newTeasByType[index].data.push({id: json.id, name});
         setTeasByType(newTeasByType);
         ToastAndroid.showWithGravityAndOffset(
           'Tea successfully added!',
@@ -100,6 +96,7 @@ const TeaManager = () => {
           0,
           150,
         );
+        textInput.clear();
       })
       .catch(error => {
         console.warn(error);
@@ -114,7 +111,10 @@ const TeaManager = () => {
         let responseTeasByType = [];
         json.forEach(teaByType => {
           let newTeasByType = {title: '', data: []};
-          newTeasByType.title = teaByType.type.name;
+          newTeasByType.title = {
+            id: teaByType.type.id,
+            name: teaByType.type.name,
+          };
           teaByType.teas.forEach(tea => {
             newTeasByType.data.push({id: tea.id, name: tea.name});
           });
@@ -139,11 +139,12 @@ const TeaManager = () => {
             <TeaListItem item={item} deleteTea={deleteTea} />
           )}
           renderSectionHeader={({section: {title}}) => (
-            <Text style={styles.header}>{title}</Text>
+            <Text style={styles.header}>{title.name}</Text>
           )}
           keyExtractor={(item, index) => item + index}
-          ListFooterComponent={<AddTea addTea={addTea} />}
-          ref={ref => (this.sectionListRef = ref)}
+          renderSectionFooter={({section: {title}}) => (
+            <AddTea addTea={addTea} typeID={title.id} />
+          )}
         />
       )}
     </View>

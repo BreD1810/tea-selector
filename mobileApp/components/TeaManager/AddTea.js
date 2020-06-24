@@ -3,7 +3,7 @@ import {TextInput, View, StyleSheet} from 'react-native';
 import Button from 'react-native-button';
 import Icon from 'react-native-vector-icons/dist/FontAwesome5';
 
-const AddTea = ({addTea}) => {
+const AddTea = ({addTea, typeID}) => {
   const [addText, setAddText] = useState('');
 
   const onChange = textValue => setAddText(textValue);
@@ -14,11 +14,16 @@ const AddTea = ({addTea}) => {
         placeholder="Add Tea..."
         style={styles.input}
         onChangeText={onChange}
+        ref={input => {
+          this.textInput = input;
+        }}
       />
       <Button
         style={styles.btn}
         containerStyle={styles.btnContainer}
-        onPress={() => addTea(addText)}>
+        onPress={() => {
+          addTea(addText, typeID, this.textInput);
+        }}>
         <Icon name="plus" size={20} color="white" />
         Add Tea
       </Button>
@@ -29,9 +34,12 @@ const AddTea = ({addTea}) => {
 const styles = StyleSheet.create({
   input: {
     height: 60,
-    padding: 8,
+    marginTop: 10,
+    padding: 20,
     fontSize: 16,
+    borderRadius: 50,
     backgroundColor: 'lightgray',
+    textAlign: 'center',
   },
   btn: {
     fontSize: 20,
