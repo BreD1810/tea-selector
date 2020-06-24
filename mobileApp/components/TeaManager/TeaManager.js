@@ -1,18 +1,20 @@
 import React, {useState, useEffect} from 'react';
 import {
   View,
-  FlatList,
+  Text,
+  SectionList,
   ActivityIndicator,
   Alert,
   ToastAndroid,
+  StyleSheet,
 } from 'react-native';
 import TeaListItem from './TeaListItem';
 import AddTea from './AddTea';
 import {serverURL} from '../../app.json';
 
 const TeaManager = () => {
-  const [teas, setTeas] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [teasByType, setTeasByType] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const deleteTea = id => {
     fetch(serverURL + '/tea/' + id, {
@@ -22,9 +24,18 @@ const TeaManager = () => {
         if (!response.ok) {
           throw new Error(response.json().error);
         } else {
-          setTeas(prevTeas => {
-            return prevTeas.filter(tea => tea.id !== id);
+          let newTeasByType = [];
+          teasByType.forEach(teaByType => {
+            let newTeaByType = {title: '', data: []};
+            newTeaByType.title = teaByType.title;
+            teaByType.data.forEach(tea => {
+              if (tea.id !== id) {
+                newTeaByType.data.push(tea);
+              }
+            });
+            newTeasByType.push(newTeaByType);
           });
+          setTeasByType(newTeasByType);
           ToastAndroid.showWithGravityAndOffset(
             'Tea successfully deleted!',
             ToastAndroid.SHORT,
@@ -47,7 +58,9 @@ const TeaManager = () => {
     if (!name) {
       Alert.alert('Error', 'Please enter a name for the new tea!');
       return;
-    } else if (teas.some(tea => tea.name === name)){
+    } else if (
+      teasByType.some(teas => teas.data.some(tea => tea.name === name))
+    ) {
       Alert.alert('Error', 'That tea already exists!');
       return;
     }
@@ -70,9 +83,16 @@ const TeaManager = () => {
         return response.json();
       })
       .then(json => {
-        setTeas(prevTeas => {
-          return [...prevTeas, {id: json.id, name}];
-        });
+        let newTeasByType = [...teasByType];
+        let index = newTeasByType.findIndex(
+          teaType => teaType.title === 'Black Tea',
+        ); ///TODO: Add in type selected by user
+        if (index === -1) {
+          newTeasByType.push({title: 'Black Tea', data: [{id: json.id, name}]});
+        } else {
+          newTeasByType[index].data.push({id: json.id, name});
+        }
+        setTeasByType(newTeasByType);
         ToastAndroid.showWithGravityAndOffset(
           'Tea successfully added!',
           ToastAndroid.SHORT,
@@ -88,10 +108,19 @@ const TeaManager = () => {
   };
 
   useEffect(() => {
-    fetch(serverURL + '/teas')
+    fetch(serverURL + '/types/teas')
       .then(response => response.json())
       .then(json => {
-        setTeas(json);
+        let responseTeasByType = [];
+        json.forEach(teaByType => {
+          let newTeasByType = {title: '', data: []};
+          newTeasByType.title = teaByType.type.name;
+          teaByType.teas.forEach(tea => {
+            newTeasByType.data.push({id: tea.id, name: tea.name});
+          });
+          responseTeasByType.push(newTeasByType);
+        });
+        setTeasByType(responseTeasByType);
       })
       .catch(error => console.error(error))
       .finally(() => {
@@ -104,17 +133,32 @@ const TeaManager = () => {
       {isLoading ? (
         <ActivityIndicator />
       ) : (
-        <FlatList
-          data={teas}
+        <SectionList
+          sections={teasByType}
           renderItem={({item}) => (
             <TeaListItem item={item} deleteTea={deleteTea} />
           )}
-          keyExtractor={item => item.id.toString()}
+          renderSectionHeader={({section: {title}}) => (
+            <Text style={styles.header}>{title}</Text>
+          )}
+          keyExtractor={(item, index) => item + index}
+          ListFooterComponent={<AddTea addTea={addTea} />}
+          ref={ref => (this.sectionListRef = ref)}
         />
       )}
-      <AddTea addTea={addTea} />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  header: {
+    fontSize: 24,
+    backgroundColor: '#fff',
+    paddingTop: 20,
+    paddingBottom: 5,
+    textAlign: 'center',
+    fontWeight: '900',
+  },
+});
 
 export default TeaManager;

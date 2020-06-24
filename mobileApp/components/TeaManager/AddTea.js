@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 15,
     marginTop: 5,
+    marginBottom: 15,
     height: 60,
     width: 200,
     overflow: 'hidden',
