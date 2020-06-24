@@ -6,21 +6,11 @@ import {
   Alert,
   ToastAndroid,
 } from 'react-native';
-import ListItem from './ListItem';
-import AddSectionItem from './AddSectionItem';
+import ListItem from './Lists/ListItem';
+import AddSectionItem from './Lists/AddSectionItem';
 import {serverURL} from '../../app.json';
 
 const TeaTypeManager = () => {
-  // const [teaTypes, setTeaTypes] = useState([
-  //   {
-  //     title: '',
-  //     data: [
-  //       {id: 1, name: 'Black'},
-  //       {id: 2, name: 'White'},
-  //       {id: 3, name: 'Green'},
-  //     ],
-  //   },
-  // ]);
   const [teaTypes, setTeaTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 

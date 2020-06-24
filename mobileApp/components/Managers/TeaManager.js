@@ -8,8 +8,8 @@ import {
   ToastAndroid,
   StyleSheet,
 } from 'react-native';
-import ListItem from './ListItem';
-import AddSectionItem from './AddSectionItem';
+import ListItem from './Lists/ListItem';
+import AddSectionItem from './Lists/AddSectionItem';
 import {serverURL} from '../../app.json';
 
 const TeaManager = () => {

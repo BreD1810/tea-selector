@@ -2,8 +2,9 @@ import React from 'react';
 import {Text} from 'react-native';
 import {createStackNavigator} from '@react-navigation/stack';
 import ManageButtons from './ManageButtons';
-import TeaManager from './TeaManager/TeaManager';
-import TeaTypeManager from './TeaManager/TeaTypeManager';
+import TeaManager from './Managers/TeaManager';
+import TeaTypeManager from './Managers/TeaTypeManager';
+import OwnerManager from './Managers/OwnerManager';
 
 const ManageStack = createStackNavigator();
 
