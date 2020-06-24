@@ -115,9 +115,11 @@ const TeaManager = () => {
             id: teaByType.type.id,
             name: teaByType.type.name,
           };
-          teaByType.teas.forEach(tea => {
-            newTeasByType.data.push({id: tea.id, name: tea.name});
-          });
+          if (teaByType.teas !== null) {
+            teaByType.teas.forEach(tea => {
+              newTeasByType.data.push({id: tea.id, name: tea.name});
+            });
+          }
           responseTeasByType.push(newTeasByType);
         });
         setTeasByType(responseTeasByType);
