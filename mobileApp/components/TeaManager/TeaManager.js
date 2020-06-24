@@ -8,7 +8,7 @@ import {
   ToastAndroid,
   StyleSheet,
 } from 'react-native';
-import TeaListItem from './TeaListItem';
+import ListItem from './ListItem';
 import AddSectionItem from './AddSectionItem';
 import {serverURL} from '../../app.json';
 
@@ -137,7 +137,7 @@ const TeaManager = () => {
           style={styles.sectionList}
           sections={teasByType}
           renderItem={({item}) => (
-            <TeaListItem item={item} deleteTea={deleteTea} />
+            <ListItem item={item} deleteFunc={deleteTea} />
           )}
           renderSectionHeader={({section: {title}}) => (
             <Text style={styles.header}>{title.name}</Text>
