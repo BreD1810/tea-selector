@@ -442,7 +442,6 @@ func GetAllTypesTeasFromDatabase() ([]TypeWithTeas, error) {
 			return nil, err
 		}
 
-		// typeWithTeas.Teas = make([]Tea, 0)
 		for teaRows.Next() {
 			tea := new(Tea)
 			err := teaRows.Scan(&tea.ID, &tea.Name)
@@ -457,4 +456,43 @@ func GetAllTypesTeasFromDatabase() ([]TypeWithTeas, error) {
 	}
 
 	return typesWithTeas, nil
+}
+
+// GetALlOwnersTeasFromDatabase gets all teas for each owner.
+func GetAllOwnersTeasFromDatabase() ([]OwnerWithTeas, error) {
+	rows, err := DB.Query("SELECT * FROM owner;")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	ownersWithTeas := make([]OwnerWithTeas, 0)
+	for rows.Next() {
+		ownerWithTeas := new(OwnerWithTeas)
+		err := rows.Scan(&ownerWithTeas.Owner.ID, &ownerWithTeas.Owner.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		ownersWithTeas = append(ownersWithTeas, *ownerWithTeas)
+	}
+
+	for i := range ownersWithTeas {
+		teaRows, err := DB.Query("SELECT tea.id, tea.name, types.id, types.name FROM teaOwners INNER JOIN tea ON teaOwners.teaID = tea.id INNER JOIN types ON types.id = tea.teaType WHERE teaOwners.ownerID = $1;", ownersWithTeas[i].Owner.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		for teaRows.Next() {
+			tea := new(Tea)
+			err := teaRows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
+			if err != nil {
+				return nil, err
+			}
+
+			ownersWithTeas[i].Teas = append(ownersWithTeas[i].Teas, *tea)
+		}
+	}
+
+	return ownersWithTeas, nil
 }

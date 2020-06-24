@@ -5,6 +5,7 @@ import ManageButtons from './ManageButtons';
 import TeaManager from './Managers/TeaManager';
 import TeaTypeManager from './Managers/TeaTypeManager';
 import OwnerManager from './Managers/OwnerManager';
+import OwnershipManager from './Managers/OwnershipManager';
 
 const ManageStack = createStackNavigator();
 
@@ -41,6 +42,13 @@ const ManageStackScreen = () => {
         component={OwnerManager}
         options={{
           headerTitle: 'Manage Owners',
+        }}
+      />
+      <ManageStack.Screen
+        name="OwnershipManager"
+        component={OwnershipManager}
+        options={{
+          headerTitle: 'Manage Tea Owners',
         }}
       />
       <ManageStack.Screen name="Temp" component={TempComponent} />

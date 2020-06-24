@@ -38,6 +38,7 @@ By default, the API will be running on `localhost:7344`.
 
 ### Owners
 - To see all current owners, send a GET request to `/owners`
+- To see all teas for every owner, send a GET request to `/owners/teas`
 - To get information about an owner, send a GET request: `/owner/{id}`
 - To add a new owner, send a POST request to `/owner`. An example body is:
 

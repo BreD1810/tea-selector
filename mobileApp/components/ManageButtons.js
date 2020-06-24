@@ -27,7 +27,7 @@ const ManageButtons = ({navigation}) => {
       <Button
         style={styles.btnSmall}
         containerStyle={styles.btnContainerSmall}
-        onPress={() => navigation.navigate('Temp')}>
+        onPress={() => navigation.navigate('OwnershipManager')}>
         Manage Ownership
       </Button>
     </View>
