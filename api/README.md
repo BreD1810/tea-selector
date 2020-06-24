@@ -26,6 +26,7 @@ By default, the API will be running on `localhost:7344`.
 
 ### Tea Types
 - To see all current tea types, send a GET request to `/types`
+- To see all teas of all types, send a GET request to `/types/teas`
 - To get information about a tea type, send a GET request: `/type/{id}` 
 - To add a new tea type, send a POST request to `/type`. An example body is:
 

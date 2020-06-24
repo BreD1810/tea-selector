@@ -416,3 +416,45 @@ func DeleteTeaOwnerFromDatabase(tea *Tea, owner *Owner) error {
 	_, err := DB.Exec("DELETE FROM teaOwners WHERE teaID = $1 AND ownerID = $2;", tea.ID, owner.ID)
 	return err
 }
+
+// GetAllTypesTeasFromDatabase gets all teas by types.
+func GetAllTypesTeasFromDatabase() ([]TypeWithTeas, error) {
+	rows, err := DB.Query("SELECT * FROM types;")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	typesWithTeas := make([]TypeWithTeas, 0)
+	for rows.Next() {
+		typeWithTeas := new(TypeWithTeas)
+		err := rows.Scan(&typeWithTeas.Type.ID, &typeWithTeas.Type.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		typesWithTeas = append(typesWithTeas, *typeWithTeas)
+	}
+
+	for i := range typesWithTeas {
+		teaRows, err := DB.Query("SELECT tea.id, tea.name FROM tea WHERE tea.teaType = $1;", typesWithTeas[i].Type.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		// typeWithTeas.Teas = make([]Tea, 0)
+		for teaRows.Next() {
+			tea := new(Tea)
+			err := teaRows.Scan(&tea.ID, &tea.Name)
+			if err != nil {
+				return nil, err
+			}
+			tea.TeaType.ID = typesWithTeas[i].Type.ID
+			tea.TeaType.Name = typesWithTeas[i].Type.Name
+
+			typesWithTeas[i].Teas = append(typesWithTeas[i].Teas, *tea)
+		}
+	}
+
+	return typesWithTeas, nil
+}
