@@ -129,11 +129,12 @@ const TeaManager = () => {
   }, []);
 
   return (
-    <View>
+    <View style={styles.view}>
       {isLoading ? (
         <ActivityIndicator />
       ) : (
         <SectionList
+          style={styles.sectionList}
           sections={teasByType}
           renderItem={({item}) => (
             <TeaListItem item={item} deleteTea={deleteTea} />
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     backgroundColor: '#fff',
-    paddingTop: 20,
+    paddingTop: 10,
     paddingBottom: 5,
     textAlign: 'center',
     fontWeight: '900',
