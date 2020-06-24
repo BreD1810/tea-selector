@@ -3,7 +3,7 @@ import {TextInput, View, StyleSheet, Dimensions} from 'react-native';
 import Button from 'react-native-button';
 import Icon from 'react-native-vector-icons/dist/FontAwesome5';
 
-const AddTea = ({addTea, typeID}) => {
+const AddSectionItem = ({placeholderText, addFunc, sectionID}) => {
   const [addText, setAddText] = useState('');
 
   const onChange = textValue => setAddText(textValue);
@@ -11,7 +11,7 @@ const AddTea = ({addTea, typeID}) => {
   return (
     <View style={styles.inputView}>
       <TextInput
-        placeholder="Add Tea..."
+        placeholder={placeholderText}
         style={styles.input}
         onChangeText={onChange}
         selection="center"
@@ -22,7 +22,7 @@ const AddTea = ({addTea, typeID}) => {
       <Button
         containerStyle={styles.btnContainer}
         onPress={() => {
-          addTea(addText, typeID, this.textInput);
+          addFunc(addText, sectionID, this.textInput);
         }}>
         <Icon name="plus" size={20} color="white" style={styles.icon} />
       </Button>
@@ -63,4 +63,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddTea;
+export default AddSectionItem;

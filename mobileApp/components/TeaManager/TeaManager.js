@@ -9,7 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import TeaListItem from './TeaListItem';
-import AddTea from './AddTea';
+import AddSectionItem from './AddSectionItem';
 import {serverURL} from '../../app.json';
 
 const TeaManager = () => {
@@ -144,7 +144,11 @@ const TeaManager = () => {
           )}
           keyExtractor={(item, index) => item + index}
           renderSectionFooter={({section: {title}}) => (
-            <AddTea addTea={addTea} typeID={title.id} />
+            <AddSectionItem
+              placeholderText={'Add Tea...'}
+              addFunc={addTea}
+              sectionID={title.id}
+            />
           )}
         />
       )}
