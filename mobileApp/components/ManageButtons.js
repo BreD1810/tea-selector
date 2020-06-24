@@ -15,7 +15,7 @@ const ManageButtons = ({navigation}) => {
       <Button
         style={styles.btn}
         containerStyle={styles.btnContainer}
-        onPress={() => navigation.navigate('Temp')}>
+        onPress={() => navigation.navigate('TeaTypeManager')}>
         Manage Tea Types
       </Button>
       <Button

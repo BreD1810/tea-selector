@@ -3,6 +3,7 @@ import {Text} from 'react-native';
 import {createStackNavigator} from '@react-navigation/stack';
 import ManageButtons from './ManageButtons';
 import TeaManager from './TeaManager/TeaManager';
+import TeaTypeManager from './TeaManager/TeaTypeManager';
 
 const ManageStack = createStackNavigator();
 
@@ -27,7 +28,14 @@ const ManageStackScreen = () => {
           headerTitle: 'Manage Teas',
         }}
       />
-      <ManageStack.Screen name="Temp" component={TempComponent}/>
+      <ManageStack.Screen
+        name="TeaTypeManager"
+        component={TeaTypeManager}
+        options={{
+          headerTitle: 'Manage Tea Types',
+        }}
+      />
+      <ManageStack.Screen name="Temp" component={TempComponent} />
     </ManageStack.Navigator>
   );
 };
