@@ -36,6 +36,13 @@ const ManageStackScreen = () => {
           headerTitle: 'Manage Tea Types',
         }}
       />
+      <ManageStack.Screen
+        name="OwnerManager"
+        component={OwnerManager}
+        options={{
+          headerTitle: 'Manage Owners',
+        }}
+      />
       <ManageStack.Screen name="Temp" component={TempComponent} />
     </ManageStack.Navigator>
   );
