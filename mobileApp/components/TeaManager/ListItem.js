@@ -21,7 +21,7 @@ const ListItem = ({item, deleteFunc}) => {
 const styles = StyleSheet.create({
   listItem: {
     padding: 15,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#eee',
   },

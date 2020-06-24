@@ -159,7 +159,6 @@ const TeaManager = () => {
 const styles = StyleSheet.create({
   header: {
     fontSize: 24,
-    backgroundColor: '#fff',
     paddingTop: 10,
     paddingBottom: 5,
     textAlign: 'center',

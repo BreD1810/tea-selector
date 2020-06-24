@@ -32,7 +32,6 @@ const AddSectionItem = ({placeholderText, addFunc, sectionID}) => {
 
 const styles = StyleSheet.create({
   inputView: {
-    backgroundColor: 'white',
     flexDirection: 'row',
     paddingTop: 10,
     paddingBottom: 10,
