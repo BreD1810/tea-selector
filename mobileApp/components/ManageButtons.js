@@ -16,6 +16,12 @@ const ManageButtons = ({navigation}) => {
         style={styles.btn}
         containerStyle={styles.btnContainer}
         onPress={() => navigation.navigate('Temp')}>
+        Manage Tea Types
+      </Button>
+      <Button
+        style={styles.btn}
+        containerStyle={styles.btnContainer}
+        onPress={() => navigation.navigate('Temp')}>
         Manage Owners
       </Button>
       <Button
