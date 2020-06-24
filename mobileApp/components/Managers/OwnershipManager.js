@@ -16,26 +16,33 @@ const OwnershipManager = () => {
   const [ownersTeas, setOwnersTeas] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const deleteTea = id => {
-    fetch(serverURL + '/tea/' + id, {
+  const deleteTea = (teaID, ownerID) => {
+    fetch(serverURL + '/tea/' + teaID + '/owner/' + ownerID, {
       method: 'DELETE',
     })
       .then(response => {
         if (!response.ok) {
           throw new Error(response.json().error);
         } else {
-          let newTeasByType = [];
-          teasByType.forEach(teaByType => {
-            let newTeaByType = {title: '', data: []};
-            newTeaByType.title = teaByType.title;
-            teaByType.data.forEach(tea => {
-              if (tea.id !== id) {
-                newTeaByType.data.push(tea);
-              }
-            });
-            newTeasByType.push(newTeaByType);
+          let newOwnersTeas = [];
+          ownersTeas.forEach(teaOwner => {
+            if (teaOwner.title.id !== ownerID) {
+              newOwnersTeas.push(teaOwner);
+            } else {
+              let newOwnerTeas = {title: '', data: []};
+              newOwnerTeas.title = {
+                id: teaOwner.title.id,
+                name: teaOwner.title.name,
+              };
+              teaOwner.data.forEach(tea => {
+                if (tea.id !== teaID) {
+                  newOwnerTeas.data.push(tea);
+                }
+              });
+              newOwnersTeas.push(newOwnerTeas);
+            }
           });
-          setTeasByType(newTeasByType);
+          setOwnersTeas(newOwnersTeas);
           ToastAndroid.showWithGravityAndOffset(
             'Tea successfully deleted!',
             ToastAndroid.SHORT,
@@ -47,34 +54,32 @@ const OwnershipManager = () => {
       })
       .catch(error => {
         console.warn(error);
-        Alert.alert(
-          'Error deleting tea',
-          'Please check if someone owns this tea!',
-        );
+        Alert.alert('Error deleting tea', 'Not sure what went wrong here...');
       });
   };
 
-  const addTea = (name, typeID, textInput) => {
-    if (!name) {
+  const addOwnersTea = (teaName, ownerID, textInput) => {
+    if (!teaName) {
       Alert.alert('Error', 'Please enter a name for the new tea!');
       return;
-    } else if (
-      teasByType.some(teas => teas.data.some(tea => tea.name === name))
-    ) {
-      Alert.alert('Error', 'That tea already exists!');
-      return;
+    } else {
+      let index = ownersTeas.findIndex(owner => owner.title.id === ownerID);
+      if (ownersTeas[index].data.some(tea => tea.name === teaName)) {
+        Alert.alert('Error', 'That tea already exists!');
+        return;
+      }
     }
 
-    addTeaAPI(name, typeID, textInput);
+    addOwnersTeaAPI(teaName, ownerID, textInput);
   };
 
-  const addTeaAPI = (name, typeID, textInput) => {
-    fetch(serverURL + '/tea', {
+  const addOwnersTeaAPI = (name, ownerID, textInput) => {
+    fetch(serverURL + '/tea/1/owner', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({name: name, type: {id: typeID}}),
+      body: JSON.stringify({id: ownerID}),
     })
       .then(response => {
         if (!response.ok) {
@@ -83,12 +88,12 @@ const OwnershipManager = () => {
         return response.json();
       })
       .then(json => {
-        let newTeasByType = [...teasByType];
-        let index = newTeasByType.findIndex(
-          teaType => teaType.title.id === typeID,
+        let newOwnersTeas = [...ownersTeas];
+        let index = newOwnersTeas.findIndex(
+          owner => owner.title.id === ownerID,
         );
-        newTeasByType[index].data.push({id: json.id, name});
-        setTeasByType(newTeasByType);
+        newOwnersTeas[index].data.push({id: json.id, name}); // TODO: Set actual tea ID
+        setOwnersTeas(newOwnersTeas);
         ToastAndroid.showWithGravityAndOffset(
           'Tea successfully added!',
           ToastAndroid.SHORT,
@@ -138,8 +143,12 @@ const OwnershipManager = () => {
         <SectionList
           style={styles.sectionList}
           sections={ownersTeas}
-          renderItem={({item}) => (
-            <ListItem item={item} deleteFunc={deleteTea} />
+          renderItem={({item, section}) => (
+            <ListItem
+              item={item}
+              deleteFunc={deleteTea}
+              sectionID={section.title.id}
+            />
           )}
           renderSectionHeader={({section: {title}}) => (
             <Text style={styles.header}>{title.name}</Text>
@@ -148,7 +157,7 @@ const OwnershipManager = () => {
           renderSectionFooter={({section: {title}}) => (
             <AddSectionItem // TODO: Change this to be a selector for teas?
               placeholderText={'Add Tea...'}
-              addFunc={addTea}
+              addFunc={addOwnersTea}
               sectionID={title.id}
             />
           )}

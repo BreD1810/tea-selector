@@ -2,7 +2,7 @@ import React from 'react';
 import {Text, TouchableOpacity, View, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/dist/FontAwesome5';
 
-const ListItem = ({item, deleteFunc}) => {
+const ListItem = ({item, deleteFunc, sectionID}) => {
   return (
     <TouchableOpacity style={styles.listItem}>
       <View style={styles.listItemView}>
@@ -11,7 +11,13 @@ const ListItem = ({item, deleteFunc}) => {
           name="trash"
           size={20}
           color="firebrick"
-          onPress={() => deleteFunc(item.id)}
+          onPress={() => {
+            if (sectionID != null) {
+              deleteFunc(item.id, sectionID);
+            } else {
+              deleteFunc(item.id);
+            }
+          }}
         />
       </View>
     </TouchableOpacity>
