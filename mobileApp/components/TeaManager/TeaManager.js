@@ -129,7 +129,7 @@ const TeaManager = () => {
   }, []);
 
   return (
-    <View style={styles.view}>
+    <View>
       {isLoading ? (
         <ActivityIndicator />
       ) : (
