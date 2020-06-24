@@ -474,7 +474,7 @@ func deleteTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Deleted tea own. teaID: %d \t ownerID: %d\n", teaID, ownerID)
+	log.Printf("Deleted tea owner. teaID: %d \t ownerID: %d\n", teaID, ownerID)
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 

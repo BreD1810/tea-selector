@@ -35,7 +35,7 @@ func main() {
 	router.HandleFunc("/tea/{id:[0-9]+}", deleteTeaHandler).Methods(http.MethodDelete)
 	router.HandleFunc("/tea/{id:[0-9]+}/owners", getTeaOwnersHandler).Methods(http.MethodGet)
 	router.HandleFunc("/tea/{id:[0-9]+}/owner", createTeaOwnerHandler).Methods(http.MethodPost)
-	router.HandleFunc("/tea/{teaID:[0-9]+}/owner/{ownerID:[0-9]+ }", deleteTeaOwnerHandler).Methods(http.MethodDelete)
+	router.HandleFunc("/tea/{teaID:[0-9]+}/owner/{ownerID:[0-9]+}", deleteTeaOwnerHandler).Methods(http.MethodDelete)
 
 	addr := ":" + cfg.Server.Port
 	log.Fatal(http.ListenAndServe(addr, router))
