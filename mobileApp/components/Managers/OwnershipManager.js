@@ -9,8 +9,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import ListItem from './Lists/ListItem';
-import AddSectionItem from './Lists/AddSectionItem';
 import {serverURL} from '../../app.json';
+import AddSectionItemPicker from './Lists/AddSectionItemPicker';
 
 const OwnershipManager = () => {
   const [ownersTeas, setOwnersTeas] = useState([]);
@@ -58,23 +58,23 @@ const OwnershipManager = () => {
       });
   };
 
-  const addOwnersTea = (teaName, ownerID, textInput) => {
-    if (!teaName) {
-      Alert.alert('Error', 'Please enter a name for the new tea!');
+  const addOwnersTea = (teaID, ownerID, resetFunc) => {
+    if (teaID === null) {
+      Alert.alert('Error', 'Please select a tea!');
       return;
     } else {
       let index = ownersTeas.findIndex(owner => owner.title.id === ownerID);
-      if (ownersTeas[index].data.some(tea => tea.name === teaName)) {
-        Alert.alert('Error', 'That tea already exists!');
+      if (ownersTeas[index].data.some(tea => tea.id === teaID)) {
+        Alert.alert('Error', 'That person already owns that tea!');
         return;
       }
     }
 
-    addOwnersTeaAPI(teaName, ownerID, textInput);
+    addOwnersTeaAPI(teaID, ownerID, resetFunc);
   };
 
-  const addOwnersTeaAPI = (name, ownerID, textInput) => {
-    fetch(serverURL + '/tea/1/owner', {
+  const addOwnersTeaAPI = (teaID, ownerID, resetFunc) => {
+    fetch(serverURL + '/tea/' + teaID + '/owner', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ const OwnershipManager = () => {
         let index = newOwnersTeas.findIndex(
           owner => owner.title.id === ownerID,
         );
-        newOwnersTeas[index].data.push({id: json.id, name}); // TODO: Set actual tea ID
+        newOwnersTeas[index].data.push({id: json.id, name: json.name});
         setOwnersTeas(newOwnersTeas);
         ToastAndroid.showWithGravityAndOffset(
           'Tea successfully added!',
@@ -101,12 +101,31 @@ const OwnershipManager = () => {
           0,
           150,
         );
-        textInput.clear();
+        resetFunc();
+        // textInput.clear();
       })
       .catch(error => {
         console.warn(error);
         Alert.alert('Error adding tea', 'Please try again.');
       });
+  };
+
+  const getTeas = () => {
+    let teas = [];
+    fetch(serverURL + '/teas')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(response.json().error);
+        }
+        return response.json();
+      })
+      .then(json => {
+        json.forEach(tea => teas.push({label: tea.name, value: tea.id}));
+      })
+      .catch(error => {
+        console.warn(error);
+      });
+    return teas;
   };
 
   useEffect(() => {
@@ -155,8 +174,9 @@ const OwnershipManager = () => {
           )}
           keyExtractor={(item, index) => item + index}
           renderSectionFooter={({section: {title}}) => (
-            <AddSectionItem // TODO: Change this to be a selector for teas?
-              placeholderText={'Add Tea...'}
+            <AddSectionItemPicker // TODO: Change this to be a selector for teas?
+              promptText={'Select A Tea...'}
+              inputItems={getTeas()}
               addFunc={addOwnersTea}
               sectionID={title.id}
             />
