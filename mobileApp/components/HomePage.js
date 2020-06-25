@@ -17,8 +17,9 @@ const HomePage = () => {
     if (checkboxesChanged) {
       setCheckboxesChanged(false);
       updateTeas();
+    } else {
+      setSelectedTea(Math.floor(Math.random() * teas.length));
     }
-    setSelectedTea(Math.floor(Math.random() * teas.length));
   };
 
   const checkboxChange = index => {
@@ -34,7 +35,6 @@ const HomePage = () => {
   }, []);
 
   const getTeas = () => {
-    console.log('Getting teas');
     fetch(serverURL + '/teas')
       .then(response => response.json())
       .then(json => {
@@ -48,22 +48,20 @@ const HomePage = () => {
   };
 
   const updateTeas = () => {
-    console.log('Updating teas');
     if (checkboxStates.some(state => state)) {
-      console.log('Some box checked');
       getAllTeasRespectingOwners();
     } else {
-      console.log('Nothing checked');
       getAllTeas();
     }
   };
 
   const getAllTeas = () => {
-    setIsLoading(true);
     fetch(serverURL + '/teas')
       .then(response => response.json())
       .then(json => {
+        setIsLoading(true);
         setTeas(json);
+        setSelectedTea(Math.floor(Math.random() * json.length));
       })
       .catch(error => console.error(error))
       .finally(() => {
@@ -72,13 +70,6 @@ const HomePage = () => {
   };
 
   const getAllTeasRespectingOwners = () => {
-    setIsLoading(true);
-    let ownerIDs = [];
-    checkboxStates.forEach((state, index) => {
-      if (state) {
-        ownerIDs.push(owners[index].id);
-      }
-    });
     fetch(serverURL + '/owners/teas')
       .then(response => {
         if (!response.ok) {
@@ -87,8 +78,14 @@ const HomePage = () => {
         return response.json();
       })
       .then(json => {
+        setIsLoading(true);
+        let ownerIDs = [];
         let newTeas = [];
-        console.log(json);
+        checkboxStates.forEach((state, index) => {
+          if (state) {
+            ownerIDs.push(owners[index].id);
+          }
+        });
         json.forEach(ownerTeasResponse => {
           if (ownerIDs.includes(ownerTeasResponse.owner.id)) {
             let ownersTeas = ownerTeasResponse.teas;
@@ -102,12 +99,9 @@ const HomePage = () => {
             });
           }
         });
-        console.log(ownerIDs.length);
-        console.log(newTeas);
         newTeas = newTeas.filter(tea => tea.count === ownerIDs.length);
-        console.log('Before: ' + teas);
         setTeas(newTeas);
-        console.log('After: ' + teas);
+        setSelectedTea(Math.floor(Math.random() * newTeas.length));
       })
       .catch(error => console.error(error))
       .finally(() => {
@@ -135,6 +129,8 @@ const HomePage = () => {
           <ActivityIndicator />
         ) : teas === [] ? (
           <Text style={styles.tea}>No teas in common!</Text>
+        ) : teas[selectedTea] === undefined ? (
+          <Text style={styles.tea}>Error... Please try again</Text>
         ) : (
           <Text style={styles.tea}>{teas[selectedTea].name}</Text>
         )}
@@ -145,7 +141,7 @@ const HomePage = () => {
         style={styles.btn}>
         Select Another Tea
       </Button>
-      <Text style={styles.subtitle}>Owners</Text>
+      <Text style={styles.subtitle}>Filter by owners:</Text>
       {isLoadingOwners ? (
         <ActivityIndicator />
       ) : (
@@ -176,7 +172,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     paddingTop: 25,
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: '600',
     color: 'black',
   },
