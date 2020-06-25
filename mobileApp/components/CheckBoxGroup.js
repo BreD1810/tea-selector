@@ -11,6 +11,7 @@ const CheckBoxGroup = ({items, states, updateFunc}) => {
             <CheckBox
               value={states[index]}
               onValueChange={() => updateFunc(index)}
+              tintColors={{true: 'dodgerblue', false: 'gray'}}
             />
             <Text style={styles.label}>{value.name}</Text>
           </View>
