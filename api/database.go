@@ -396,19 +396,27 @@ func GetAllTeaOwnersFromDatabase() ([]TeaWithOwners, error) {
 }
 
 // CreateTeaOwnerInDatabase adds an owner to a tea in the database.
-func CreateTeaOwnerInDatabase(teaID int, owner *Owner) error {
+func CreateTeaOwnerInDatabase(teaID int, owner *Owner) (Tea, error) {
+	tea := new(Tea)
+
 	_, err := DB.Exec("INSERT INTO teaOwners VALUES ($1, $2);", teaID, owner.ID)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			return errors.New("This relationship already exists")
+			return *tea, errors.New("This relationship already exists")
 		}
 		if strings.Contains(err.Error(), "FOREIGN KEY constraint failed") {
-			return errors.New("Either the tea or owner ID do not exist in the database")
+			return *tea, errors.New("Either the tea or owner ID do not exist in the database")
 		}
-		return err
+		return *tea, err
 	}
 
-	return nil
+	row := DB.QueryRow("SELECT tea.id, tea.name, types.id, types.name FROM tea INNER JOIN types ON tea.teaType = types.id WHERE tea.id = $1;", teaID)
+	err = row.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
+	if err != nil {
+		return *tea, errors.New("Tea ID not found after insert")
+	}
+
+	return *tea, nil
 }
 
 // DeleteTeaOwnerFromDatabase deletes an owner of a tea from the database.

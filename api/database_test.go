@@ -891,11 +891,27 @@ func TestCreateTeaOwnerFromDatabase(t *testing.T) {
 
 	teaID := 1
 	owner := Owner{ID: 1}
+	rows := mock.NewRows([]string{"id", "name", "typeID", "typeName"})
+	rows.AddRow(teaID, "Snowball", 1, "Black Tea")
 
 	mock.ExpectExec("INSERT INTO teaOwners").WithArgs(teaID, owner.ID).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectQuery("SELECT *(.)+ FROM tea").WithArgs(teaID).WillReturnRows(rows)
 
-	if err := CreateTeaOwnerInDatabase(teaID, &owner); err != nil {
+	tea, err := CreateTeaOwnerInDatabase(teaID, &owner)
+	if err != nil {
 		t.Errorf("Database returned unexpected error: %v\n", err)
+	}
+	if tea.ID != 1 {
+		t.Errorf("Database returned unexpected tea ID: %d\n", tea.ID)
+	}
+	if tea.Name != "Snowball" {
+		t.Errorf("Database returned unexpected tea name: %q\n", tea.Name)
+	}
+	if tea.TeaType.ID != 1 {
+		t.Errorf("Database returned unexpected tea type id: %q\n", tea.TeaType.ID)
+	}
+	if tea.TeaType.Name != "Black Tea" {
+		t.Errorf("Database returned unexpected tea type name: %q\n", tea.TeaType.Name)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -918,7 +934,7 @@ func TestCreateTeaOwnerFromDatabaseRelationshipExists(t *testing.T) {
 
 	mock.ExpectExec("INSERT INTO teaOwners").WithArgs(teaID, owner.ID).WillReturnError(errors.New("UNIQUE constraint failed"))
 
-	if err := CreateTeaOwnerInDatabase(teaID, &owner); err.Error() != "This relationship already exists" {
+	if _,err := CreateTeaOwnerInDatabase(teaID, &owner); err.Error() != "This relationship already exists" {
 		t.Errorf("Database returned unexpected error: %v\n", err)
 	}
 
@@ -942,7 +958,7 @@ func TestCreateTeaOwnerFromDatabaseDoesntExists(t *testing.T) {
 
 	mock.ExpectExec("INSERT INTO teaOwners").WithArgs(teaID, owner.ID).WillReturnError(errors.New("FOREIGN KEY constraint failed"))
 
-	if err := CreateTeaOwnerInDatabase(teaID, &owner); err.Error() != "Either the tea or owner ID do not exist in the database" {
+	if _, err := CreateTeaOwnerInDatabase(teaID, &owner); err.Error() != "Either the tea or owner ID do not exist in the database" {
 		t.Errorf("Database returned unexpected error: %q\n", err)
 	}
 

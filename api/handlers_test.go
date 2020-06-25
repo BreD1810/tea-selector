@@ -804,14 +804,14 @@ func TestCreateTeaOwnerHandler(t *testing.T) {
 		t.Errorf("POST /tea/{id}/owner returned wrong status code:\n got: %v\n want: %v", status, http.StatusCreated)
 	}
 
-	expected := `{"result":"success"}`
+	expected := `{"id":1,"name":"Snowball","type":{"id":1,"name":"Black Tea"}}`
 	if actual := rr.Body.String(); actual != expected {
 		t.Errorf("POST /tea/{id}/owner returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
 	}
 }
 
-func createTeaOwnerResponseMock(teaID int, owner *Owner) error {
-	return nil
+func createTeaOwnerResponseMock(teaID int, owner *Owner) (Tea, error) {
+	return Tea{ID: 1, Name: "Snowball", TeaType: TeaType{ID: 1, Name: "Black Tea"}}, nil
 }
 
 func TestCreateTeaOwnerErrorHandler(t *testing.T) {
@@ -842,8 +842,9 @@ func TestCreateTeaOwnerErrorHandler(t *testing.T) {
 	}
 }
 
-func createTeaOwnerResponseErrorMock(teaID int, owner *Owner) error {
-	return errors.New("Error")
+func createTeaOwnerResponseErrorMock(teaID int, owner *Owner) (Tea, error) {
+	tea := new(Tea)
+	return *tea, errors.New("Error")
 }
 
 func TestDeleteTeaOwnerHandler(t *testing.T) {

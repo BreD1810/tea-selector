@@ -431,14 +431,15 @@ func createTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if err := CreateTeaOwnerFunc(id, &owner); err != nil {
+	tea, err := CreateTeaOwnerFunc(id, &owner)
+	if err != nil {
 		log.Printf("Error creating owner for tea with ID: %d\n\t Error: %s\n", id, err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	log.Printf("Created new owner for tea. teaID: %d, ownerID: %d\n", id, owner.ID)
-	respondWithJSON(w, http.StatusCreated, map[string]string{"result": "success"})
+	respondWithJSON(w, http.StatusCreated, tea)
 }
 
 // DeleteTeaOwnerFunc points to a function to delete an owner from a tea in the database. Useful for mocking.
