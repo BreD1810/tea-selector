@@ -112,7 +112,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Successfully logged in %q\n", userLogin.Username)
-	respondWithJSON(w, http.StatusOK, validToken)
+	respondWithJSON(w, http.StatusOK, map[string]string{"token": validToken})
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +152,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Successfully registered and logged in %q\n", userLogin.Username)
-	respondWithJSON(w, http.StatusOK, validToken)
+	respondWithJSON(w, http.StatusOK, map[string]string{"token": validToken})
 }
 
 func changePasswordHandler(w http.ResponseWriter, r *http.Request) {
