@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // A UserLogin stores the username and password for a user
@@ -80,7 +81,20 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	userLogin.Username = strings.ToLower(userLogin.Username)
 
-	//TODO: Check password.
+	// Retrieve from DB
+	storedPassword, err := GetPasswordFromDatabase(userLogin.Username)
+	if err != nil {
+		log.Printf("Failed to get password from database for user %q\n", userLogin.Username)
+		respondWithError(w, http.StatusBadRequest, "User doesn't exist")
+	}
+
+	// Compare hash with sent password.
+	storedPasswordBytes := []byte(storedPassword)
+	passwordBytes := []byte(userLogin.Password)
+	if err := bcrypt.CompareHashAndPassword(storedPasswordBytes, passwordBytes); err != nil {
+		log.Printf("Password incorrect for user %q\n", userLogin.Username)
+		respondWithError(w, http.StatusBadRequest, "Incorrect password")
+	}
 
 	validToken, err := GenerateJWT(userLogin.Username)
 	if err != nil {

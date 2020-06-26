@@ -141,6 +141,18 @@ func createUserTable() {
 	checkError("creating user table", err)
 }
 
+// GetPasswordFromDatabase retrieves a users hashed password from the datbase.
+func GetPasswordFromDatabase(user string) (string, error) {
+	row := DB.QueryRow("SELECT password FROM user WHERE username=$1;", user)
+
+	var password string
+	if err := row.Scan(&password); err != nil {
+		return "", err
+	}
+
+	return password, nil
+}
+
 // GetAllTeaTypesFromDatabase retrieves all the tea types available in the database.
 func GetAllTeaTypesFromDatabase() ([]TeaType, error) {
 	rows, err := DB.Query("SELECT * FROM types;")
