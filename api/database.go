@@ -162,6 +162,14 @@ func CreateUserInDatabase(user UserLogin) error {
 	return nil
 }
 
+// ChangePasswordInDatabase updates a user's password.
+func ChangePasswordInDatabase(username string, password string) error {
+	if _, err := DB.Exec("UPDATE user SET password=$1 WHERE username=$2;", password, username); err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetAllTeaTypesFromDatabase retrieves all the tea types available in the database.
 func GetAllTeaTypesFromDatabase() ([]TeaType, error) {
 	rows, err := DB.Query("SELECT * FROM types;")

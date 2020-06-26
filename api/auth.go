@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -23,7 +24,7 @@ func GenerateJWT(user string) (string, error) {
 	claims := token.Claims.(jwt.MapClaims)
 
 	claims["authorized"] = true
-	claims["users"] = user
+	claims["user"] = user
 	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
 
 	tokenString, err := token.SignedString(signingKey)
@@ -33,6 +34,28 @@ func GenerateJWT(user string) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+// GetJWTUser gets the user from a JWT token
+func GetJWTUser(tokenString string) (string, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("Error parsing JWT")
+		}
+		return signingKey, nil
+	})
+	if err != nil {
+		return "", nil
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok && token.Valid {
+		return "", errors.New("Couldn't extract claims from token")
+	}
+
+	username := fmt.Sprintf("%v", claims["user"])
+
+	return username, nil
 }
 
 func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {

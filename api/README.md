@@ -39,6 +39,15 @@ By default, the API will be running on `localhost:7344`.
             "password": "NewPassword"
         }
 
+- To change the password, send a POST request to `/changepassword` with the body:
+
+        {
+            "old": "YourOldPassword",
+            "new": "YourNewPassword"
+        }
+
+Note: This will only work if you're already authorized.
+
 ### Tea Types
 - To see all current tea types, send a GET request to `/types`
 - To see all teas of all types, send a GET request to `/types/teas`

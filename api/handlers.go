@@ -15,7 +15,13 @@ import (
 // A UserLogin stores the username and password for a user
 type UserLogin struct {
 	Username string `json:"username"`
-	Password string `json:"password`
+	Password string `json:"password"`
+}
+
+// A NewPasswordRequest stores the old and new password for a reset request.
+type NewPasswordRequest struct {
+	OldPassword string `json:"old"`
+	NewPassword string `json:"new"`
 }
 
 // A TeaType gives the ID and name for a type of tea.
@@ -124,7 +130,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	userLogin.Username = strings.ToLower(userLogin.Username)
 	passwordBytes := []byte(userLogin.Password)
 
-	// Hash password
 	hash, err := bcrypt.GenerateFromPassword(passwordBytes, bcrypt.MinCost)
 	if err != nil {
 		log.Println(`Error hashing password`)
@@ -148,6 +153,62 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Successfully registered and logged in %q\n", userLogin.Username)
 	respondWithJSON(w, http.StatusOK, validToken)
+}
+
+func changePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(`Received request "POST /changepassword"`)
+
+	var newPasswordBody NewPasswordRequest
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&newPasswordBody); err != nil {
+		log.Println("Failed to extract old and new password")
+		respondWithError(w, http.StatusBadRequest, "Bad request body")
+		return
+	}
+	defer r.Body.Close()
+
+	// Get the username of the JWT
+	username, err := GetJWTUser(r.Header["Token"][0])
+	if err != nil {
+		log.Println("Unable to change password")
+		respondWithError(w, http.StatusInternalServerError, "Error changing user password")
+		return
+	}
+
+	// Retrieve old password from DB
+	storedPassword, err := GetPasswordFromDatabase(username)
+	if err != nil {
+		log.Printf("Failed to get password from database for user %q\n", username)
+		respondWithError(w, http.StatusBadRequest, "User doesn't exist")
+		return
+	}
+
+	// Compare old hash with sent old password.
+	storedPasswordBytes := []byte(storedPassword)
+	passwordBytes := []byte(newPasswordBody.OldPassword)
+	if err := bcrypt.CompareHashAndPassword(storedPasswordBytes, passwordBytes); err != nil {
+		log.Printf("Password incorrect for user %q\n", username)
+		respondWithError(w, http.StatusBadRequest, "Incorrect password")
+		return
+	}
+
+	// Hash new password
+	newPasswordBytes := []byte(newPasswordBody.NewPassword)
+	hash, err := bcrypt.GenerateFromPassword(newPasswordBytes, bcrypt.MinCost)
+	if err != nil {
+		log.Println(`Error hashing password`)
+		respondWithError(w, http.StatusInternalServerError, "Unable to create user")
+		return
+	}
+	newPassword := string(hash)
+
+	if err := ChangePasswordInDatabase(username, newPassword); err != nil {
+		log.Printf("Error changing password: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, "Error changing user password")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
 // GetAllTeaTypesFunc points to the function to get all tea typevalues. Useful for mocking

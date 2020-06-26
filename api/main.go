@@ -16,6 +16,7 @@ func main() {
 
 	// Account functions
 	router.HandleFunc("/login", loginHandler).Methods(http.MethodPost)
+	router.Handle("/changepassword", isAuthorized(changePasswordHandler)).Methods(http.MethodPost)
 	if cfg.Server.RegisterEnabled {
 		router.HandleFunc("/register", registerHandler).Methods(http.MethodPost)
 	}
