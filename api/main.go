@@ -13,6 +13,8 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 
+	router.HandleFunc("/login", loginHandler).Methods(http.MethodPost)
+
 	// Tea Types
 	router.HandleFunc("/types", getAllTeaTypesHandler).Methods(http.MethodGet)
 	router.HandleFunc("/types/teas", getAllTeasTypesHandler).Methods(http.MethodGet)

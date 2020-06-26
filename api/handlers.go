@@ -6,9 +6,16 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
+
+// A UserLogin stores the username and password for a user
+type UserLogin struct {
+	Username string `json:"username"`
+	Password string `json:"password`
+}
 
 // A TeaType gives the ID and name for a type of tea.
 type TeaType struct {
@@ -57,6 +64,31 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(`Received request "POST /login"`)
+
+	var userLogin UserLogin
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&userLogin); err != nil {
+		log.Println("Failed to extract username and password")
+		respondWithError(w, http.StatusBadRequest, "Not Authorized")
+		return
+	}
+	defer r.Body.Close()
+
+	userLogin.Username = strings.ToLower(userLogin.Username)
+
+	//TODO: Check password.
+
+	validToken, err := GenerateJWT(userLogin.Username)
+	if err != nil {
+		log.Printf("Error generating token: %v\n", err)
+	}
+
+	log.Printf("Successfully logged in %q\n", userLogin.Username)
+	respondWithJSON(w, http.StatusOK, validToken)
 }
 
 // GetAllTeaTypesFunc points to the function to get all tea typevalues. Useful for mocking
