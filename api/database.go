@@ -48,6 +48,7 @@ func createDatabase(cfg Config) {
 	createTeaTable()
 	createOwnerTable(cfg.Database.Owners)
 	createTeaOwnersTable()
+	createUserTable()
 }
 
 func createTeaTypeTable(types []string) {
@@ -129,6 +130,15 @@ func createTeaOwnersTable() {
 					   );`
 	_, err := DB.Exec(creationString)
 	checkError("creating owner table", err)
+}
+
+func createUserTable() {
+	creationString := `CREATE TABLE user (
+							username TEXT NOT NULL UNIQUE PRIMARY KEY,
+							password TEXT NOT NULL
+						);`
+	_, err := DB.Exec(creationString)
+	checkError("creating user table", err)
 }
 
 // GetAllTeaTypesFromDatabase retrieves all the tea types available in the database.

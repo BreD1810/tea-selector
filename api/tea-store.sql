@@ -23,6 +23,9 @@ CREATE TABLE teaOwners ( teaID INTEGER,
                             ON UPDATE CASCADE
                             ON DELETE RESTRICT);
 
+CREATE TABLE user ( username TEXT NOT NULL UNIQUE PRIMARY KEY,
+                     password TEXT NOT NULL);
+
 INSERT INTO types (name) VALUES ('Black Tea'), ('Green Tea'), ('White Tea');
 
 INSERT INTO owner (name) VALUES ('John'), ('Jane');
