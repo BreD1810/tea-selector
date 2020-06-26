@@ -1,5 +1,6 @@
 server:
     port: 7344
+    registerenabled: false
     signingkey: "mySuperSecretPhrase"
 
 database:

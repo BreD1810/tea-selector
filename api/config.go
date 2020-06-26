@@ -10,8 +10,9 @@ import (
 // A Config represents the config file data.
 type Config struct {
 	Server struct {
-		Port       string `yaml:"port"`
-		SigningKey string `yaml:"signingkey`
+		Port            string `yaml:"port"`
+		RegisterEnabled bool   `yaml:"registerenabled"`
+		SigningKey      string `yaml:"signingkey"`
 	} `yaml:"server"`
 	Database struct {
 		Location string   `yaml:"location"`
@@ -50,6 +51,12 @@ func logConfig(cfg Config) {
 		log.Fatal("Error: no port specified")
 	} else {
 		log.Printf("Port: %v\n", cfg.Server.Port)
+	}
+
+	if cfg.Server.RegisterEnabled {
+		log.Println(`POST /register endpoint enabled`)
+	} else {
+		log.Println(`POST /register endpoint disabled`)
 	}
 	log.Printf("Database Location: %v\n", cfg.Database.Location)
 	log.Printf("Tea types: %q\n", cfg.Database.TeaTypes)

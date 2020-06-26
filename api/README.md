@@ -15,7 +15,8 @@ go build
 
 ## Configuration
 The `config.yml` file gives an example configuration. This can be changed to your liking. You **MUST** set the value of `signingkey`, and the `port` to be used. Optionally, you can also:
-- Set the database location
+- Enable the endpoint `POST /register`.
+- Set the database location.
 - Set the default tea types and owners.
 
 Additionally, `tea-store.sql` is included to setup an example database. To use it, run `sqlite3 tea-store.db`, and then `.read tea-store.sql`.
