@@ -16,6 +16,7 @@ func main() {
 
 	// Account functions
 	router.HandleFunc("/login", loginHandler).Methods(http.MethodPost)
+	router.HandleFunc("/register", registerHandler).Methods(http.MethodPost)
 
 	// Tea Types
 	router.Handle("/types", isAuthorized(getAllTeaTypesHandler)).Methods(http.MethodGet)

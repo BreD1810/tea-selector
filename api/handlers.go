@@ -74,7 +74,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&userLogin); err != nil {
 		log.Println("Failed to extract username and password")
-		respondWithError(w, http.StatusBadRequest, "Not Authorized")
+		respondWithError(w, http.StatusBadRequest, "Bad request body")
 		return
 	}
 	defer r.Body.Close()
@@ -86,6 +86,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Failed to get password from database for user %q\n", userLogin.Username)
 		respondWithError(w, http.StatusBadRequest, "User doesn't exist")
+		return
 	}
 
 	// Compare hash with sent password.
@@ -94,14 +95,58 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if err := bcrypt.CompareHashAndPassword(storedPasswordBytes, passwordBytes); err != nil {
 		log.Printf("Password incorrect for user %q\n", userLogin.Username)
 		respondWithError(w, http.StatusBadRequest, "Incorrect password")
+		return
 	}
 
 	validToken, err := GenerateJWT(userLogin.Username)
 	if err != nil {
 		log.Printf("Error generating token: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, "Error generating token")
+		return
 	}
 
 	log.Printf("Successfully logged in %q\n", userLogin.Username)
+	respondWithJSON(w, http.StatusOK, validToken)
+}
+
+func registerHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(`Received request "POST /register"`)
+
+	var userLogin UserLogin
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&userLogin); err != nil {
+		log.Println(`Failed to extract username and password`)
+		respondWithError(w, http.StatusBadRequest, "Bad request body")
+		return
+	}
+	defer r.Body.Close()
+
+	userLogin.Username = strings.ToLower(userLogin.Username)
+	passwordBytes := []byte(userLogin.Password)
+
+	// Hash password
+	hash, err := bcrypt.GenerateFromPassword(passwordBytes, bcrypt.MinCost)
+	if err != nil {
+		log.Println(`Error hashing password`)
+		respondWithError(w, http.StatusInternalServerError, "Unable to create user")
+		return
+	}
+
+	userLogin.Password = string(hash)
+	if err := CreateUserInDatabase(userLogin); err != nil {
+		log.Printf("Error creating user: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	validToken, err := GenerateJWT(userLogin.Username)
+	if err != nil {
+		log.Printf("Error generating token: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, "Error generating token")
+		return
+	}
+
+	log.Printf("Successfully registered and logged in %q\n", userLogin.Username)
 	respondWithJSON(w, http.StatusOK, validToken)
 }
 

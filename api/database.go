@@ -153,6 +153,15 @@ func GetPasswordFromDatabase(user string) (string, error) {
 	return password, nil
 }
 
+// CreateUserInDatabase creates a user in the database using a username and pre-hashed password
+func CreateUserInDatabase(user UserLogin) error {
+	if _, err := DB.Exec("INSERT INTO user(username, password) VALUES ($1, $2)", user.Username, user.Password); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetAllTeaTypesFromDatabase retrieves all the tea types available in the database.
 func GetAllTeaTypesFromDatabase() ([]TeaType, error) {
 	rows, err := DB.Query("SELECT * FROM types;")
