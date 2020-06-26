@@ -10,7 +10,8 @@ import (
 // A Config represents the config file data.
 type Config struct {
 	Server struct {
-		Port string `yaml:"port"`
+		Port       string `yaml:"port"`
+		SigningKey string `yaml:"signingkey`
 	} `yaml:"server"`
 	Database struct {
 		Location string   `yaml:"location"`
@@ -39,7 +40,17 @@ func getConfig() Config {
 }
 
 func logConfig(cfg Config) {
-	log.Printf("Port: %v\n", cfg.Server.Port)
+	if cfg.Server.SigningKey == "" {
+		log.Fatal("Error: no signing key in config")
+	} else {
+		log.Println("Signing key set successfully")
+	}
+
+	if cfg.Server.Port == "" {
+		log.Fatal("Error: no port specified")
+	} else {
+		log.Printf("Port: %v\n", cfg.Server.Port)
+	}
 	log.Printf("Database Location: %v\n", cfg.Database.Location)
 	log.Printf("Tea types: %q\n", cfg.Database.TeaTypes)
 	log.Printf("Owners: %q\n", cfg.Database.Owners)

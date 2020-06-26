@@ -1,5 +1,6 @@
 server:
     port: 7344
+    signingkey: "mySuperSecretPhrase"
 
 database:
     location: "tea-store.db"

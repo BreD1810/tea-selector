@@ -14,8 +14,7 @@ go build
 ```
 
 ## Configuration
-The `config.yml` file gives an example configuration. This can be changed to your liking. You can:
-- Set the port the API runs on.
+The `config.yml` file gives an example configuration. This can be changed to your liking. You **MUST** set the value of `signingkey`, and the `port` to be used. Optionally, you can also:
 - Set the database location
 - Set the default tea types and owners.
 
