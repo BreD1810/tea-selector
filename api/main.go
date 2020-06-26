@@ -9,35 +9,37 @@ import (
 
 func main() {
 	cfg := getConfig()
+	SetSigningKey(cfg.Server.SigningKey)
 	initialiseDatabase(cfg)
 
 	router := mux.NewRouter().StrictSlash(true)
 
+	// Account functions
 	router.HandleFunc("/login", loginHandler).Methods(http.MethodPost)
 
 	// Tea Types
-	router.HandleFunc("/types", getAllTeaTypesHandler).Methods(http.MethodGet)
-	router.HandleFunc("/types/teas", getAllTeasTypesHandler).Methods(http.MethodGet)
-	router.HandleFunc("/type/{id:[0-9]+}", getTeaTypeHandler).Methods(http.MethodGet)
-	router.HandleFunc("/type", createTeaTypeHandler).Methods(http.MethodPost)
-	router.HandleFunc("/type/{id:[0-9]+}", deleteTeaTypeHandler).Methods(http.MethodDelete)
+	router.Handle("/types", isAuthorized(getAllTeaTypesHandler)).Methods(http.MethodGet)
+	router.Handle("/types/teas", isAuthorized(getAllTeasTypesHandler)).Methods(http.MethodGet)
+	router.Handle("/type/{id:[0-9]+}", isAuthorized(getTeaTypeHandler)).Methods(http.MethodGet)
+	router.Handle("/type", isAuthorized(createTeaTypeHandler)).Methods(http.MethodPost)
+	router.Handle("/type/{id:[0-9]+}", isAuthorized(deleteTeaTypeHandler)).Methods(http.MethodDelete)
 
 	// Tea Owners
-	router.HandleFunc("/owners", getAllOwnersHandler).Methods(http.MethodGet)
-	router.HandleFunc("/owners/teas", getAllOwnersTeasHandler).Methods(http.MethodGet)
-	router.HandleFunc("/owner/{id:[0-9]+}", getOwnerHandler).Methods(http.MethodGet)
-	router.HandleFunc("/owner", createOwnerHandler).Methods(http.MethodPost)
-	router.HandleFunc("/owner/{id:[0-9]+}", deleteOwnerHandler).Methods(http.MethodDelete)
+	router.Handle("/owners", isAuthorized(getAllOwnersHandler)).Methods(http.MethodGet)
+	router.Handle("/owners/teas", isAuthorized(getAllOwnersTeasHandler)).Methods(http.MethodGet)
+	router.Handle("/owner/{id:[0-9]+}", isAuthorized(getOwnerHandler)).Methods(http.MethodGet)
+	router.Handle("/owner", isAuthorized(createOwnerHandler)).Methods(http.MethodPost)
+	router.Handle("/owner/{id:[0-9]+}", isAuthorized(deleteOwnerHandler)).Methods(http.MethodDelete)
 
 	// Tea
-	router.HandleFunc("/teas", getAllTeasHandler).Methods(http.MethodGet)
-	router.HandleFunc("/teas/owners", getAllTeaOwnersHandler).Methods(http.MethodGet)
-	router.HandleFunc("/tea/{id:[0-9]+}", getTeaHandler).Methods(http.MethodGet)
-	router.HandleFunc("/tea", createTeaHandler).Methods(http.MethodPost)
-	router.HandleFunc("/tea/{id:[0-9]+}", deleteTeaHandler).Methods(http.MethodDelete)
-	router.HandleFunc("/tea/{id:[0-9]+}/owners", getTeaOwnersHandler).Methods(http.MethodGet)
-	router.HandleFunc("/tea/{id:[0-9]+}/owner", createTeaOwnerHandler).Methods(http.MethodPost)
-	router.HandleFunc("/tea/{teaID:[0-9]+}/owner/{ownerID:[0-9]+}", deleteTeaOwnerHandler).Methods(http.MethodDelete)
+	router.Handle("/teas", isAuthorized(getAllTeasHandler)).Methods(http.MethodGet)
+	router.Handle("/teas/owners", isAuthorized(getAllTeaOwnersHandler)).Methods(http.MethodGet)
+	router.Handle("/tea/{id:[0-9]+}", isAuthorized(getTeaHandler)).Methods(http.MethodGet)
+	router.Handle("/tea", isAuthorized(createTeaHandler)).Methods(http.MethodPost)
+	router.Handle("/tea/{id:[0-9]+}", isAuthorized(deleteTeaHandler)).Methods(http.MethodDelete)
+	router.Handle("/tea/{id:[0-9]+}/owners", isAuthorized(getTeaOwnersHandler)).Methods(http.MethodGet)
+	router.Handle("/tea/{id:[0-9]+}/owner", isAuthorized(createTeaOwnerHandler)).Methods(http.MethodPost)
+	router.Handle("/tea/{teaID:[0-9]+}/owner/{ownerID:[0-9]+}", isAuthorized(deleteTeaOwnerHandler)).Methods(http.MethodDelete)
 
 	addr := ":" + cfg.Server.Port
 	log.Fatal(http.ListenAndServe(addr, router))
