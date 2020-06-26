@@ -24,6 +24,21 @@ Additionally, `tea-store.sql` is included to setup an example database. To use i
 ## Interacting with the API
 By default, the API will be running on `localhost:7344`.
 
+### Users
+- To login, send a POST request to `/login` with the body:
+
+        {
+            "username": "YourUsername",
+            "password": "YourPassword"
+        }
+
+- To register (if enabled), send a POST request to `/register` with the body:
+
+        {
+            "username": "NewUsername",
+            "password": "NewPassword"
+        }
+
 ### Tea Types
 - To see all current tea types, send a GET request to `/types`
 - To see all teas of all types, send a GET request to `/types/teas`
