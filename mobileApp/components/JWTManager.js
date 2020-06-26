@@ -16,6 +16,20 @@ const JWTManager = {
       console.warn('AsyncStorage error: ' + error.message);
     }
   },
+  async setJWT(jwt) {
+    try {
+      await AsyncStorage.setItem('jwt_token', jwt);
+    } catch (error) {
+      console.warn('AsyncStorage error: ' + error.message);
+    }
+  },
+  async clearJWT() {
+    try{
+      await AsyncStorage.removeItem('jwt_token');
+    } catch (error) {
+      console.warn('AsynStorage error: ' + error.message);
+    }
+  },
 };
 
 export default JWTManager;

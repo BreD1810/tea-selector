@@ -1,19 +1,64 @@
 import React, {useState} from 'react';
 import {
+  Alert,
   TextInput,
+  ToastAndroid,
   KeyboardAvoidingView,
   Text,
   StyleSheet,
   Dimensions,
 } from 'react-native';
 import Button from 'react-native-button';
+import {serverURL} from '../app.json';
 
-const Login = ({setJWT}) => {
+const Login = ({setJWT: loginFunc}) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const attemptLogin = () => {
-    console.log('Attempting login');
+    if (username === '') {
+      Alert.alert('Error logging in', 'Please enter a username');
+      return;
+    }
+    if (password === '') {
+      Alert.alert('Error logging in', 'Please enter a password');
+      return;
+    }
+
+    fetch(serverURL + '/login', {
+      method: 'POST',
+      body: JSON.stringify({username, password}),
+    })
+      .then(response => {
+        if (!response.ok) {
+          response.json().then(json => {
+            throw new Error(json);
+          });
+        }
+        return response.json();
+      })
+      .then(json => {
+        loginFunc(json.token);
+        ToastAndroid.showWithGravityAndOffset(
+          'Successfully logged in!',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          0,
+          150,
+        );
+        this.usernameInput.clear();
+        this.passwordInput.clear();
+      })
+      .catch(error => {
+        console.warn(error);
+        if (error === 'Incorrect password') {
+          Alert.alert('Error logging in', 'Incorrect username');
+        } else if (error === "User doesn't exist") {
+          Alert.alert('Error logging in', 'Incorrect password');
+        } else {
+          Alert.alert('Error logging in', 'Please try again.');
+        }
+      });
   };
 
   return (
@@ -38,7 +83,7 @@ const Login = ({setJWT}) => {
         }}
       />
       <Button
-        onPress={attemptLogin}
+        onPress={() => attemptLogin()}
         containerStyle={styles.btnContainer}
         style={styles.btn}>
         Login

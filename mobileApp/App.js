@@ -1,5 +1,4 @@
 import React, {useState, useEffect} from 'react';
-import {Text} from 'react-native';
 import 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -14,6 +13,12 @@ const Tab = createBottomTabNavigator();
 const App: () => React$Node = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [jwt, setJWT] = useState(null);
+
+  const login = newJWT => {
+    setJWT(newJWT);
+    JWTManager.setJWT(newJWT);
+    setIsAuthorized(true);
+  };
 
   useEffect(() => {
     checkAuthorized();
@@ -50,7 +55,7 @@ const App: () => React$Node = () => {
           </Tab.Navigator>
         </NavigationContainer>
       ) : (
-        <Login setJWT={setJWT} />
+        <Login setJWT={login} />
       )}
     </>
   );
