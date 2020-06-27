@@ -47,13 +47,6 @@ const ManageStackScreen = ({jwtToken}) => {
           headerTitle: 'Manage Tea Owners',
         }}
       />
-      <ManageStack.Screen
-        name="AccountManager"
-        children={() => <AccountManager jwtToken={jwtToken} />}
-        options={{
-          headerTitle: 'Manage Account',
-        }}
-      />
     </ManageStack.Navigator>
   );
 };
