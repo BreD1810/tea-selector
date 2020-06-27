@@ -128,8 +128,18 @@ const TeaManager = ({jwtToken}) => {
               newTeasByType.data.push({id: tea.id, name: tea.name});
             });
           }
+          newTeasByType.data.sort((a, b) =>
+            a.name > b.name ? 1 : b.name > a.name ? -1 : 0,
+          ); // Sort teas alphabetically
           responseTeasByType.push(newTeasByType);
         });
+        responseTeasByType.sort((a, b) =>
+          a.title.name > b.title.name
+            ? 1
+            : b.title.name > a.title.name
+            ? -1
+            : 0,
+        ); // Sort types alphabetically.
         setTeasByType(responseTeasByType);
       })
       .catch(error => console.error(error))
