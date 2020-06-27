@@ -12,7 +12,6 @@ import {
 import Button from 'react-native-button';
 import {serverURL} from '../../app.json';
 import JWTManager from '../JWTManager';
-import Login from '../Login';
 
 const AccountManager = ({jwtToken, setLoggedIn}) => {
   const [oldPassword, setOldPassword] = useState('');

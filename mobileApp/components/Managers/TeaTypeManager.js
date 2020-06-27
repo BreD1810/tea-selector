@@ -78,6 +78,9 @@ const TeaTypeManager = ({jwtToken}) => {
       .then(json => {
         let newTeaTypes = [...teaTypes];
         newTeaTypes[0].data.push({id: json.id, name});
+        newTeaTypes[0].data.sort((a, b) =>
+          a.name > b.name ? 1 : b.name > a.name ? -1 : 0,
+        ); // Sort tea types
         setTeaTypes(newTeaTypes);
         ToastAndroid.showWithGravityAndOffset(
           'Tea type successfully added!',

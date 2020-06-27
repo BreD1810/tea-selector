@@ -78,6 +78,9 @@ const OwnerManager = ({jwtToken}) => {
       .then(json => {
         let newTeaOwners = [...teaOwners];
         newTeaOwners[0].data.push({id: json.id, name});
+        newTeaOwners[0].data.sort((a, b) =>
+          a.name > b.name ? 1 : b.name > a.name ? -1 : 0,
+        ); // Sort the owners
         setTeaOwners(newTeaOwners);
         ToastAndroid.showWithGravityAndOffset(
           'Owner successfully added!',
