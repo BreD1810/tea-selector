@@ -25,7 +25,7 @@ func GenerateJWT(user string) (string, error) {
 
 	claims["authorized"] = true
 	claims["user"] = user
-	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+	claims["exp"] = time.Now().AddDate(0, 0, 7).Unix() // 7 days expiry
 
 	tokenString, err := token.SignedString(signingKey)
 
