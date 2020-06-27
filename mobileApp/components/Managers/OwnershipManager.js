@@ -12,13 +12,16 @@ import ListItem from './Lists/ListItem';
 import {serverURL} from '../../app.json';
 import AddSectionItemPicker from './Lists/AddSectionItemPicker';
 
-const OwnershipManager = () => {
+const OwnershipManager = ({jwtToken}) => {
   const [ownersTeas, setOwnersTeas] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const deleteTea = (teaID, ownerID) => {
     fetch(serverURL + '/tea/' + teaID + '/owner/' + ownerID, {
       method: 'DELETE',
+      headers: {
+        Token: jwtToken,
+      },
     })
       .then(response => {
         if (!response.ok) {
@@ -78,6 +81,7 @@ const OwnershipManager = () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Token: jwtToken,
       },
       body: JSON.stringify({id: ownerID}),
     })
@@ -112,7 +116,11 @@ const OwnershipManager = () => {
 
   const getTeas = () => {
     let teas = [];
-    fetch(serverURL + '/teas')
+    fetch(serverURL + '/teas', {
+      headers: {
+        Token: jwtToken,
+      },
+    })
       .then(response => {
         if (!response.ok) {
           throw new Error(response.json().error);
@@ -129,7 +137,11 @@ const OwnershipManager = () => {
   };
 
   useEffect(() => {
-    fetch(serverURL + '/owners/teas')
+    fetch(serverURL + '/owners/teas', {
+      headers: {
+        Token: jwtToken,
+      },
+    })
       .then(response => response.json())
       .then(json => {
         let newOwnersTeas = [];
@@ -174,7 +186,7 @@ const OwnershipManager = () => {
           )}
           keyExtractor={(item, index) => item + index}
           renderSectionFooter={({section: {title}}) => (
-            <AddSectionItemPicker // TODO: Change this to be a selector for teas?
+            <AddSectionItemPicker
               promptText={'Select A Tea...'}
               inputItems={getTeas()}
               addFunc={addOwnersTea}

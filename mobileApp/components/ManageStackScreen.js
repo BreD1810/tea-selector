@@ -13,7 +13,7 @@ const TempComponent = () => {
   return <Text>Nothing here yet!</Text>;
 };
 
-const ManageStackScreen = () => {
+const ManageStackScreen = ({jwtToken}) => {
   return (
     <ManageStack.Navigator initialRouteName="Manage">
       <ManageStack.Screen
@@ -25,33 +25,32 @@ const ManageStackScreen = () => {
       />
       <ManageStack.Screen
         name="TeaManager"
-        component={TeaManager}
+        children={() => <TeaManager jwtToken={jwtToken} />}
         options={{
           headerTitle: 'Manage Teas',
         }}
       />
       <ManageStack.Screen
         name="TeaTypeManager"
-        component={TeaTypeManager}
+        children={() => <TeaTypeManager jwtToken={jwtToken} />}
         options={{
           headerTitle: 'Manage Tea Types',
         }}
       />
       <ManageStack.Screen
         name="OwnerManager"
-        component={OwnerManager}
+        children={() => <OwnerManager jwtToken={jwtToken} />}
         options={{
           headerTitle: 'Manage Owners',
         }}
       />
       <ManageStack.Screen
         name="OwnershipManager"
-        component={OwnershipManager}
+        children={() => <OwnershipManager jwtToken={jwtToken} />}
         options={{
           headerTitle: 'Manage Tea Owners',
         }}
       />
-      <ManageStack.Screen name="Temp" component={TempComponent} />
     </ManageStack.Navigator>
   );
 };

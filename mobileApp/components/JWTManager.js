@@ -35,10 +35,10 @@ const JWTManager = {
     }
   },
   async clearJWT() {
-    try{
+    try {
       await AsyncStorage.removeItem('jwt_token');
     } catch (error) {
-      console.warn('AsynStorage error: ' + error.message);
+      console.warn('AsyncStorage error: ' + error.message);
     }
   },
 };

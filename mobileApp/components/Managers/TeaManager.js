@@ -12,13 +12,16 @@ import ListItem from './Lists/ListItem';
 import AddSectionItem from './Lists/AddSectionItem';
 import {serverURL} from '../../app.json';
 
-const TeaManager = () => {
+const TeaManager = ({jwtToken}) => {
   const [teasByType, setTeasByType] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const deleteTea = id => {
     fetch(serverURL + '/tea/' + id, {
       method: 'DELETE',
+      headers: {
+        Token: jwtToken,
+      },
     })
       .then(response => {
         if (!response.ok) {
@@ -73,6 +76,7 @@ const TeaManager = () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Token: jwtToken,
       },
       body: JSON.stringify({name: name, type: {id: typeID}}),
     })
@@ -105,7 +109,11 @@ const TeaManager = () => {
   };
 
   useEffect(() => {
-    fetch(serverURL + '/types/teas')
+    fetch(serverURL + '/types/teas', {
+      headers: {
+        Token: jwtToken,
+      },
+    })
       .then(response => response.json())
       .then(json => {
         let responseTeasByType = [];

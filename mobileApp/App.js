@@ -4,7 +4,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/dist/FontAwesome5';
 import HomePage from './components/HomePage';
-import ManagePage from './components/ManageStackScreen';
+import ManageStackScreen from './components/ManageStackScreen';
 import JWTManager from './components/JWTManager';
 import Login from './components/Login';
 
@@ -50,8 +50,14 @@ const App: () => React$Node = () => {
               activeTintColor: 'dodgerblue',
               inactiveTintColor: 'grey',
             }}>
-            <Tab.Screen name="Home" component={HomePage} />
-            <Tab.Screen name="Manage" component={ManagePage} />
+            <Tab.Screen
+              name="Home"
+              children={() => <HomePage jwtToken={jwt} />}
+            />
+            <Tab.Screen
+              name="Manage"
+              children={() => <ManageStackScreen jwtToken={jwt} />}
+            />
           </Tab.Navigator>
         </NavigationContainer>
       ) : (

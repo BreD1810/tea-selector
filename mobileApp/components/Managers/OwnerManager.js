@@ -10,13 +10,16 @@ import ListItem from './Lists/ListItem';
 import AddSectionItem from './Lists/AddSectionItem';
 import {serverURL} from '../../app.json';
 
-const OwnerManager = () => {
+const OwnerManager = ({jwtToken}) => {
   const [teaOwners, setTeaOwners] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const deleteOwner = id => {
     fetch(serverURL + '/owner/' + id, {
       method: 'DELETE',
+      headers: {
+        Token: jwtToken,
+      },
     })
       .then(response => {
         if (!response.ok) {
@@ -62,6 +65,7 @@ const OwnerManager = () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Token: jwtToken,
       },
       body: JSON.stringify({name: name}),
     })
@@ -91,7 +95,11 @@ const OwnerManager = () => {
   };
 
   useEffect(() => {
-    fetch(serverURL + '/owners')
+    fetch(serverURL + '/owners', {
+      headers: {
+        Token: jwtToken,
+      },
+    })
       .then(response => response.json())
       .then(json => {
         let newTeaOwners = [{title: '', data: []}];

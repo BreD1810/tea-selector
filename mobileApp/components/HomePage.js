@@ -4,7 +4,7 @@ import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import Button from 'react-native-button';
 import CheckBoxGroup from './CheckBoxGroup';
 
-const HomePage = () => {
+const HomePage = ({jwtToken}) => {
   const [teas, setTeas] = useState([]);
   const [selectedTea, setSelectedTea] = useState(0);
   const [owners, setOwners] = useState([]);
@@ -35,7 +35,11 @@ const HomePage = () => {
   }, []);
 
   const getTeas = () => {
-    fetch(serverURL + '/teas')
+    fetch(serverURL + '/teas', {
+      headers: {
+        Token: jwtToken,
+      },
+    })
       .then(response => response.json())
       .then(json => {
         setTeas(json);
@@ -56,7 +60,11 @@ const HomePage = () => {
   };
 
   const getAllTeas = () => {
-    fetch(serverURL + '/teas')
+    fetch(serverURL + '/teas', {
+      headers: {
+        Token: jwtToken,
+      },
+    })
       .then(response => response.json())
       .then(json => {
         setIsLoading(true);
@@ -70,7 +78,11 @@ const HomePage = () => {
   };
 
   const getAllTeasRespectingOwners = () => {
-    fetch(serverURL + '/owners/teas')
+    fetch(serverURL + '/owners/teas', {
+      headers: {
+        Token: jwtToken,
+      },
+    })
       .then(response => {
         if (!response.ok) {
           throw new Error(response.json().error);
@@ -110,7 +122,11 @@ const HomePage = () => {
   };
 
   const getOwners = () => {
-    fetch(serverURL + '/owners')
+    fetch(serverURL + '/owners', {
+      headers: {
+        Token: jwtToken,
+      },
+    })
       .then(response => response.json())
       .then(json => {
         setOwners(json);
