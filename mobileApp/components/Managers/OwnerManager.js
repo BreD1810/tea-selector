@@ -106,6 +106,9 @@ const OwnerManager = ({jwtToken}) => {
         json.forEach(owner => {
           newTeaOwners[0].data.push(owner);
         });
+        newTeaOwners[0].data.sort((a, b) =>
+          a.name > b.name ? 1 : b.name > a.name ? -1 : 0,
+        );
         setTeaOwners(newTeaOwners);
       })
       .catch(error => console.error(error))
