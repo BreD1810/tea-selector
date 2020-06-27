@@ -2,12 +2,16 @@ import {AsyncStorage} from 'react-native';
 import {serverURL} from '../app.json';
 
 const JWTManager = {
-  async getJWT(setJWT, setIsAuthorized) {
+  async getJWT(setJWT, setIsAuthorized, setIsLoading) {
     try {
       const value = await AsyncStorage.getItem('jwt_token');
       if (value !== null) {
         console.log('Found JWT');
-        fetch(serverURL + '/owners')
+        fetch(serverURL + '/owners', {
+          headers: {
+            Token: value,
+          },
+        })
           .then(response => {
             if (!response.ok) {
               console.log('No longer valid');
@@ -19,12 +23,15 @@ const JWTManager = {
           })
           .catch(error => {
             console.warn(error);
-          });
+          })
+          .finally(() => setIsLoading(false));
       } else {
         console.log('No JWT');
+        setIsLoading(false);
       }
     } catch (error) {
       console.warn('AsyncStorage error: ' + error.message);
+      setIsLoading(false);
     }
   },
   async setJWT(jwt) {

@@ -7,12 +7,14 @@ import HomePage from './components/HomePage';
 import ManageStackScreen from './components/ManageStackScreen';
 import JWTManager from './components/JWTManager';
 import Login from './components/Login';
+import {ActivityIndicator, StyleSheet, View} from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
 const App: () => React$Node = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [jwt, setJWT] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const login = newJWT => {
     setJWT(newJWT);
@@ -21,12 +23,16 @@ const App: () => React$Node = () => {
   };
 
   useEffect(() => {
-    JWTManager.getJWT(setJWT, setIsAuthorized);
+    JWTManager.getJWT(setJWT, setIsAuthorized, setIsLoading);
   }, []);
 
   return (
     <>
-      {isAuthorized ? (
+      {isLoading ? (
+        <View style={styles.container}>
+          <ActivityIndicator size={100} color="dodgerblue" />
+        </View>
+      ) : isAuthorized ? (
         <NavigationContainer>
           <Tab.Navigator
             screenOptions={({route}) => ({
@@ -63,4 +69,12 @@ const App: () => React$Node = () => {
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 export default App;
