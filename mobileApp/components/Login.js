@@ -75,6 +75,7 @@ const Login = ({setJWT: loginFunc}) => {
       />
       <TextInput
         placeholder={'Password'}
+        secureTextEntry={true}
         style={styles.input}
         onChangeText={textValue => setPassword(textValue)}
         selection="center"
