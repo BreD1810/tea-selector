@@ -160,9 +160,19 @@ const OwnershipManager = ({jwtToken}) => {
             teaOwner.teas.forEach(tea => {
               newOwnerTeas.data.push({id: tea.id, name: tea.name});
             });
+            newOwnerTeas.data.sort((a, b) =>
+              a.name > b.name ? 1 : b.name > a.name ? -1 : 0,
+            ); // Sort each person's teas alphabetically.
           }
           newOwnersTeas.push(newOwnerTeas);
         });
+        newOwnersTeas.sort((a, b) =>
+          a.title.name > b.title.name
+            ? 1
+            : b.title.name > a.title.name
+            ? -1
+            : 0,
+        ); // Sort owners alphabetically.
         setOwnersTeas(newOwnersTeas);
       })
       .then(() => getTeas())
