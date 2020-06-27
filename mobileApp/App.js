@@ -21,12 +21,8 @@ const App: () => React$Node = () => {
   };
 
   useEffect(() => {
-    checkAuthorized();
-  }, []);
-
-  const checkAuthorized = () => {
     JWTManager.getJWT(setJWT, setIsAuthorized);
-  };
+  }, []);
 
   return (
     <>

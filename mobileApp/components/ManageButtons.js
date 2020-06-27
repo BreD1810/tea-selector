@@ -30,6 +30,12 @@ const ManageButtons = ({navigation}) => {
         onPress={() => navigation.navigate('OwnershipManager')}>
         Manage Ownership
       </Button>
+      <Button
+        style={styles.btnSmall}
+        containerStyle={styles.btnContainerSmall}
+        onPress={() => navigation.navigate('AccountManager')}>
+        Manage Account
+      </Button>
     </View>
   );
 };

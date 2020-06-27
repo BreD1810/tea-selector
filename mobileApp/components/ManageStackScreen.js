@@ -1,17 +1,13 @@
 import React from 'react';
-import {Text} from 'react-native';
 import {createStackNavigator} from '@react-navigation/stack';
 import ManageButtons from './ManageButtons';
 import TeaManager from './Managers/TeaManager';
 import TeaTypeManager from './Managers/TeaTypeManager';
 import OwnerManager from './Managers/OwnerManager';
 import OwnershipManager from './Managers/OwnershipManager';
+import AccountManager from './Managers/AccountManager';
 
 const ManageStack = createStackNavigator();
-
-const TempComponent = () => {
-  return <Text>Nothing here yet!</Text>;
-};
 
 const ManageStackScreen = ({jwtToken}) => {
   return (
@@ -49,6 +45,13 @@ const ManageStackScreen = ({jwtToken}) => {
         children={() => <OwnershipManager jwtToken={jwtToken} />}
         options={{
           headerTitle: 'Manage Tea Owners',
+        }}
+      />
+      <ManageStack.Screen
+        name="AccountManager"
+        children={() => <AccountManager jwtToken={jwtToken} />}
+        options={{
+          headerTitle: 'Manage Account',
         }}
       />
     </ManageStack.Navigator>
