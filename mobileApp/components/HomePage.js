@@ -101,14 +101,18 @@ const HomePage = ({jwtToken}) => {
         json.forEach(ownerTeasResponse => {
           if (ownerIDs.includes(ownerTeasResponse.owner.id)) {
             let ownersTeas = ownerTeasResponse.teas;
-            ownersTeas.forEach(tea => {
-              let index = newTeas.findIndex(otherTea => otherTea.id === tea.id);
-              if (index === -1) {
-                newTeas.push({...tea, count: 1});
-              } else {
-                newTeas[index].count = newTeas[index].count + 1;
-              }
-            });
+            if (ownersTeas !== null) {
+              ownersTeas.forEach(tea => {
+                let index = newTeas.findIndex(
+                  otherTea => otherTea.id === tea.id,
+                );
+                if (index === -1) {
+                  newTeas.push({...tea, count: 1});
+                } else {
+                  newTeas[index].count = newTeas[index].count + 1;
+                }
+              });
+            }
           }
         });
         newTeas = newTeas.filter(tea => tea.count === ownerIDs.length);
@@ -129,6 +133,7 @@ const HomePage = ({jwtToken}) => {
     })
       .then(response => response.json())
       .then(json => {
+        json.sort((a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0)); // Sort owner alphabetically
         setOwners(json);
       })
       .catch(error => console.error(error))
@@ -146,7 +151,7 @@ const HomePage = ({jwtToken}) => {
         ) : teas === [] ? (
           <Text style={styles.tea}>No teas in common!</Text>
         ) : teas[selectedTea] === undefined ? (
-          <Text style={styles.tea}>Error... Please try again</Text>
+          <Text style={styles.tea}>No teas in common!</Text>
         ) : (
           <Text style={styles.tea}>{teas[selectedTea].name}</Text>
         )}
