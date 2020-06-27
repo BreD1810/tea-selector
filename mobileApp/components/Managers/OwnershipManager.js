@@ -130,6 +130,11 @@ const OwnershipManager = ({jwtToken}) => {
       .then(json => {
         json.forEach(tea => newTeas.push({label: tea.name, value: tea.id}));
       })
+      .then(() => {
+        newTeas = newTeas.sort((a, b) =>
+          a.label > b.label ? 1 : b.label > a.label ? -1 : 0,
+        ); // Sort alphabetically
+      })
       .then(() => setTeas(newTeas))
       .catch(error => {
         console.warn(error);
