@@ -15,6 +15,7 @@ import AddSectionItemPicker from './Lists/AddSectionItemPicker';
 const OwnershipManager = ({jwtToken}) => {
   const [ownersTeas, setOwnersTeas] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [teas, setTeas] = useState([]);
 
   const deleteTea = (teaID, ownerID) => {
     fetch(serverURL + '/tea/' + teaID + '/owner/' + ownerID, {
@@ -106,7 +107,6 @@ const OwnershipManager = ({jwtToken}) => {
           150,
         );
         resetFunc();
-        // textInput.clear();
       })
       .catch(error => {
         console.warn(error);
@@ -115,7 +115,7 @@ const OwnershipManager = ({jwtToken}) => {
   };
 
   const getTeas = () => {
-    let teas = [];
+    let newTeas = [];
     fetch(serverURL + '/teas', {
       headers: {
         Token: jwtToken,
@@ -128,12 +128,12 @@ const OwnershipManager = ({jwtToken}) => {
         return response.json();
       })
       .then(json => {
-        json.forEach(tea => teas.push({label: tea.name, value: tea.id}));
+        json.forEach(tea => newTeas.push({label: tea.name, value: tea.id}));
       })
+      .then(() => setTeas(newTeas))
       .catch(error => {
         console.warn(error);
       });
-    return teas;
   };
 
   useEffect(() => {
@@ -160,6 +160,7 @@ const OwnershipManager = ({jwtToken}) => {
         });
         setOwnersTeas(newOwnersTeas);
       })
+      .then(() => getTeas())
       .catch(error => console.error(error))
       .finally(() => {
         setIsLoading(false);
@@ -188,7 +189,7 @@ const OwnershipManager = ({jwtToken}) => {
           renderSectionFooter={({section: {title}}) => (
             <AddSectionItemPicker
               promptText={'Select A Tea...'}
-              inputItems={getTeas()}
+              inputItems={teas}
               addFunc={addOwnersTea}
               sectionID={title.id}
             />
