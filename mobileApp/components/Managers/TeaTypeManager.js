@@ -106,6 +106,9 @@ const TeaTypeManager = ({jwtToken}) => {
         json.forEach(teaType => {
           newTeaTypes[0].data.push(teaType);
         });
+        newTeaTypes[0].data.sort((a, b) =>
+          a.name > b.name ? 1 : b.name > a.name ? -1 : 0,
+        ); // Sort types alphabetically
         setTeaTypes(newTeaTypes);
       })
       .catch(error => console.error(error))
