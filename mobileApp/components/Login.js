@@ -29,16 +29,11 @@ const Login = ({setJWT: loginFunc}) => {
       method: 'POST',
       body: JSON.stringify({username, password}),
     })
-      .then(response => {
-        if (!response.ok) {
-          response.json().then(json => {
-            throw new Error(json);
-          });
-        }
-        return response.json();
-      })
+      .then(response => response.json())
       .then(json => {
-        loginFunc(json.token);
+        if (json.error) {
+          throw new Error(json.error);
+        }
         ToastAndroid.showWithGravityAndOffset(
           'Successfully logged in!',
           ToastAndroid.SHORT,
@@ -48,14 +43,16 @@ const Login = ({setJWT: loginFunc}) => {
         );
         this.usernameInput.clear();
         this.passwordInput.clear();
+        return json;
       })
+      .then(json => loginFunc(json.token))
       .catch(error => {
-        console.warn(error);
-        if (error === 'Incorrect password') {
-          Alert.alert('Error logging in', 'Incorrect username');
-        } else if (error === "User doesn't exist") {
+        if (error.message === 'Incorrect password') {
           Alert.alert('Error logging in', 'Incorrect password');
+        } else if (error.message === "User doesn't exist") {
+          Alert.alert('Error logging in', 'Incorrect username');
         } else {
+          console.warn(error);
           Alert.alert('Error logging in', 'Please try again.');
         }
       });
