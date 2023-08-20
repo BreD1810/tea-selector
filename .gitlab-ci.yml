@@ -1,5 +1,5 @@
 stages:
-    - test
+    - quality
     - build
 
 .go-cache:
@@ -9,9 +9,15 @@ stages:
       paths:
         - .go/pkg/mod/
 
+api_lint:
+  stage: quality
+  image: golangci/golangci-lint
+  script:
+    - cd api
+    - golangci-lint run -v --color=always
 
 api_unit_tests:
-    stage: test
+    stage: quality
     image: golang
     script:
         - cd api

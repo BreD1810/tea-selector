@@ -1,4 +1,4 @@
-.PHONY: build run test
+.PHONY: build run test lint
 
 build:
 	go build
@@ -8,3 +8,6 @@ run:
 
 test:
 	go test -race ./...
+
+lint:
+	golangci-lint run

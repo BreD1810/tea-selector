@@ -32,7 +32,7 @@ func initialiseDatabase(cfg Config) {
 		checkError("opening database", err)
 		DB = database
 		DB.SetMaxOpenConns(1)
-		DB.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
+		_, _ = DB.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
 	}
 	log.Println("Database initialised.")
 }
@@ -42,7 +42,7 @@ func createDatabase(cfg Config) {
 	checkError("creating database", err)
 	DB = database
 	DB.SetMaxOpenConns(1)
-	DB.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
+	_, _ = DB.Exec("PRAGMA foreign_keys = ON;") // Enable foreign key checks
 
 	createTeaTypeTable(cfg.Database.TeaTypes)
 	createTeaTable()
@@ -141,7 +141,7 @@ func createUserTable() {
 	checkError("creating user table", err)
 }
 
-// GetPasswordFromDatabase retrieves a users hashed password from the datbase.
+// GetPasswordFromDatabase retrieves a users hashed password from the database.
 func GetPasswordFromDatabase(user string) (string, error) {
 	row := DB.QueryRow("SELECT password FROM user WHERE username=$1;", user)
 
@@ -228,6 +228,9 @@ func CreateTeaTypeInDatabase(teaType *TeaType) error {
 // DeleteTeaTypeInDatabase deletes a tea type from the database.
 func DeleteTeaTypeInDatabase(teaType *TeaType) error {
 	rows, err := DB.Query("SELECT name FROM types WHERE id=$1;", teaType.ID)
+	if err != nil {
+		return err
+	}
 
 	rows.Next()
 	err = rows.Scan(&teaType.Name)
@@ -298,6 +301,9 @@ func CreateOwnerInDatabase(owner *Owner) error {
 // DeleteOwnerFromDatabase deletes an owner from the database.
 func DeleteOwnerFromDatabase(owner *Owner) error {
 	rows, err := DB.Query("SELECT name FROM owner WHERE id=$1;", owner.ID)
+	if err != nil {
+		return err
+	}
 
 	rows.Next()
 	err = rows.Scan(&owner.Name)
@@ -368,6 +374,9 @@ func CreateTeaInDatabase(tea *Tea) error {
 // DeleteTeaFromDatabase deletes a tea from the database using it's ID.
 func DeleteTeaFromDatabase(tea *Tea) error {
 	rows, err := DB.Query("SELECT name FROM tea WHERE id=$1;", tea.ID)
+	if err != nil {
+		return err
+	}
 
 	rows.Next()
 	err = rows.Scan(&tea.Name)

@@ -1,0 +1,15 @@
+run:
+  timeout: 5m
+  tests: false
+linters:
+  enable:
+    - bodyclose
+    # - goconst
+    - gocritic
+    - gofmt
+    - goimports
+    # - gosec
+    - misspell
+linters-settings:
+  misspell:
+    locale: UK

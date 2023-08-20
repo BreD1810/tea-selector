@@ -8,9 +8,12 @@ import (
 )
 
 func main() {
-	cfg := getConfig()
+	cfg, err := getConfig()
+	if err != nil {
+		log.Fatalln(err)
+	}
 	SetSigningKey(cfg.Server.SigningKey)
-	initialiseDatabase(cfg)
+	initialiseDatabase(*cfg)
 
 	router := mux.NewRouter().StrictSlash(true)
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -21,11 +22,10 @@ type Config struct {
 	} `yaml:"database"`
 }
 
-func getConfig() Config {
+func getConfig() (*Config, error) {
 	f, err := os.Open("config.yml")
-
 	if err != nil {
-		log.Fatal("Error opening config.yml")
+		return nil, fmt.Errorf("Error opening config.yml")
 	}
 	defer f.Close()
 
@@ -33,11 +33,11 @@ func getConfig() Config {
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&cfg)
 	if err != nil {
-		log.Fatal("Error parsing config.yml")
+		return nil, fmt.Errorf("Error parsing config.yml")
 	}
 
 	logConfig(cfg)
-	return cfg
+	return &cfg, nil
 }
 
 func logConfig(cfg Config) {
