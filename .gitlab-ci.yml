@@ -2,32 +2,24 @@ stages:
     - test
     - build
 
-cache:
-    paths:
-        - /$GOPATH/src/github.com
-        - /$GOPATH/src/golang.org
-        - /$GOPATH/src/gopkg.in
+.go-cache:
+    variables:
+        GOPATH: $CI_PROJECT_DIR/.go
+    cache:
+      paths:
+        - .go/pkg/mod/
+
 
 api_unit_tests:
     stage: test
     image: golang
-    before_script:
-        - mkdir -p $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds
-        - cp -r $CI_PROJECT_DIR $GOPATH/src/$REPO/$GROUP/$PROJECT
-        - ln -s $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds/$GROUP
-        - go get -v -d -t ./...
     script:
-        - go test -v ./api -coverprofile .goCoverage.txt
+        - cd api
+        - go test -v -race ./... -coverprofile .goCoverage.txt
 
 api_build:
     stage: build
     image: golang
-    before_script:
-        - mkdir -p $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds
-        - cp -r $CI_PROJECT_DIR $GOPATH/src/$REPO/$GROUP/$PROJECT
-        - ln -s $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds/$GROUP
-        - go get -v -d ./...
-        - ls
     script:
         - cd api
         - env GOOS=linux GOARCH=amd64 go build -o output-amd64
