@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ type Config struct {
 	} `yaml:"database"`
 }
 
-func getConfig() (*Config, error) {
+func GetConfig() (*Config, error) {
 	f, err := os.Open("config.yml")
 	if err != nil {
 		return nil, fmt.Errorf("Error opening config.yml")

@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"database/sql"
@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/BreD1810/tea-selector/api/internal/models"
 	"github.com/gorilla/mux"
 )
 
@@ -24,7 +25,7 @@ func TestGetAllTeaTypesHandler(t *testing.T) {
 	GetAllTeaTypesFunc = allTeaTypeResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getAllTeaTypesHandler)
+	handler := http.HandlerFunc(GetAllTeaTypesHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -37,10 +38,10 @@ func TestGetAllTeaTypesHandler(t *testing.T) {
 	}
 }
 
-func allTeaTypeResponseMock() ([]TeaType, error) {
-	tea1 := TeaType{ID: 1, Name: "Black Tea"}
-	tea2 := TeaType{ID: 2, Name: "Green Tea"}
-	return []TeaType{tea1, tea2}, nil
+func allTeaTypeResponseMock() ([]models.TeaType, error) {
+	tea1 := models.TeaType{ID: 1, Name: "Black Tea"}
+	tea2 := models.TeaType{ID: 2, Name: "Green Tea"}
+	return []models.TeaType{tea1, tea2}, nil
 }
 
 func TestGetTeaTypeHandler(t *testing.T) {
@@ -58,7 +59,7 @@ func TestGetTeaTypeHandler(t *testing.T) {
 	GetTeaTypeFunc = getTeaTypeResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getTeaTypeHandler)
+	handler := http.HandlerFunc(GetTeaTypeHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -71,7 +72,7 @@ func TestGetTeaTypeHandler(t *testing.T) {
 	}
 }
 
-func getTeaTypeResponseMock(teaType *TeaType) error {
+func getTeaTypeResponseMock(teaType *models.TeaType) error {
 	teaType.Name = "Black Tea"
 	return nil
 }
@@ -91,7 +92,7 @@ func TestGetTeaTypeHandlerError(t *testing.T) {
 	GetTeaTypeFunc = getTeaTypeErrorResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getTeaTypeHandler)
+	handler := http.HandlerFunc(GetTeaTypeHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -104,7 +105,7 @@ func TestGetTeaTypeHandlerError(t *testing.T) {
 	}
 }
 
-func getTeaTypeErrorResponseMock(teaType *TeaType) error {
+func getTeaTypeErrorResponseMock(teaType *models.TeaType) error {
 	return sql.ErrNoRows
 }
 
@@ -120,7 +121,7 @@ func TestCreateTeaTypeHandler(t *testing.T) {
 	CreateTeaTypeFunc = createTeaTypeResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(createTeaTypeHandler)
+	handler := http.HandlerFunc(CreateTeaTypeHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusCreated {
@@ -133,7 +134,7 @@ func TestCreateTeaTypeHandler(t *testing.T) {
 	}
 }
 
-func createTeaTypeResponseMock(teaType *TeaType) error {
+func createTeaTypeResponseMock(teaType *models.TeaType) error {
 	teaType.ID = 10
 	return nil
 }
@@ -150,7 +151,7 @@ func TestErrorCreateTeaTypeHandler(t *testing.T) {
 	CreateTeaTypeFunc = createTeaTypeResponseErrorMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(createTeaTypeHandler)
+	handler := http.HandlerFunc(CreateTeaTypeHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -163,7 +164,7 @@ func TestErrorCreateTeaTypeHandler(t *testing.T) {
 	}
 }
 
-func createTeaTypeResponseErrorMock(teaType *TeaType) error {
+func createTeaTypeResponseErrorMock(teaType *models.TeaType) error {
 	return errors.New("Error")
 }
 
@@ -182,7 +183,7 @@ func TestDeleteTeaTypeHandler(t *testing.T) {
 	DeleteTeaTypeFunc = deleteTeaTypeResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(deleteTeaTypeHandler)
+	handler := http.HandlerFunc(DeleteTeaTypeHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -195,7 +196,7 @@ func TestDeleteTeaTypeHandler(t *testing.T) {
 	}
 }
 
-func deleteTeaTypeResponseMock(teaType *TeaType) error {
+func deleteTeaTypeResponseMock(teaType *models.TeaType) error {
 	teaType.Name = "Black Tea"
 	return nil
 }
@@ -215,7 +216,7 @@ func TestDeleteTeaTypeErrorHandler(t *testing.T) {
 	DeleteTeaTypeFunc = deleteTeaTypeResponseErrorMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(deleteTeaTypeHandler)
+	handler := http.HandlerFunc(DeleteTeaTypeHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -228,7 +229,7 @@ func TestDeleteTeaTypeErrorHandler(t *testing.T) {
 	}
 }
 
-func deleteTeaTypeResponseErrorMock(teaType *TeaType) error {
+func deleteTeaTypeResponseErrorMock(teaType *models.TeaType) error {
 	return errors.New("sql: Rows are closed")
 }
 
@@ -244,7 +245,7 @@ func TestGetAllOwnersHandler(t *testing.T) {
 	GetAllOwnersFunc = allTeaOwnersResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getAllOwnersHandler)
+	handler := http.HandlerFunc(GetAllOwnersHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -257,10 +258,10 @@ func TestGetAllOwnersHandler(t *testing.T) {
 	}
 }
 
-func allTeaOwnersResponseMock() ([]Owner, error) {
-	owner1 := Owner{ID: 1, Name: "John"}
-	owner2 := Owner{ID: 2, Name: "Jane"}
-	return []Owner{owner1, owner2}, nil
+func allTeaOwnersResponseMock() ([]models.Owner, error) {
+	owner1 := models.Owner{ID: 1, Name: "John"}
+	owner2 := models.Owner{ID: 2, Name: "Jane"}
+	return []models.Owner{owner1, owner2}, nil
 }
 
 func TestGetOwnerHandler(t *testing.T) {
@@ -278,7 +279,7 @@ func TestGetOwnerHandler(t *testing.T) {
 	GetOwnerFunc = getOwnerResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getOwnerHandler)
+	handler := http.HandlerFunc(GetOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -291,7 +292,7 @@ func TestGetOwnerHandler(t *testing.T) {
 	}
 }
 
-func getOwnerResponseMock(owner *Owner) error {
+func getOwnerResponseMock(owner *models.Owner) error {
 	owner.Name = "John"
 	return nil
 }
@@ -311,7 +312,7 @@ func TestGetOwnerHandlerError(t *testing.T) {
 	GetOwnerFunc = getHandlerErrorResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getOwnerHandler)
+	handler := http.HandlerFunc(GetOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -324,7 +325,7 @@ func TestGetOwnerHandlerError(t *testing.T) {
 	}
 }
 
-func getHandlerErrorResponseMock(owner *Owner) error {
+func getHandlerErrorResponseMock(owner *models.Owner) error {
 	return sql.ErrNoRows
 }
 
@@ -340,7 +341,7 @@ func TestCreateOwnerHandler(t *testing.T) {
 	CreateOwnerFunc = createOwnerResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(createOwnerHandler)
+	handler := http.HandlerFunc(CreateOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusCreated {
@@ -353,7 +354,7 @@ func TestCreateOwnerHandler(t *testing.T) {
 	}
 }
 
-func createOwnerResponseMock(owner *Owner) error {
+func createOwnerResponseMock(owner *models.Owner) error {
 	owner.ID = 10
 	return nil
 }
@@ -370,7 +371,7 @@ func TestErrorCreateOwnerHandler(t *testing.T) {
 	CreateOwnerFunc = createOwnerResponseErrorMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(createOwnerHandler)
+	handler := http.HandlerFunc(CreateOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -383,7 +384,7 @@ func TestErrorCreateOwnerHandler(t *testing.T) {
 	}
 }
 
-func createOwnerResponseErrorMock(owner *Owner) error {
+func createOwnerResponseErrorMock(owner *models.Owner) error {
 	return errors.New("Error")
 }
 
@@ -402,7 +403,7 @@ func TestDeleteOwnerHandler(t *testing.T) {
 	DeleteOwnerFunc = deleteOwnerResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(deleteOwnerHandler)
+	handler := http.HandlerFunc(DeleteOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -415,7 +416,7 @@ func TestDeleteOwnerHandler(t *testing.T) {
 	}
 }
 
-func deleteOwnerResponseMock(owner *Owner) error {
+func deleteOwnerResponseMock(owner *models.Owner) error {
 	owner.Name = "John"
 	return nil
 }
@@ -435,7 +436,7 @@ func TestDeleteOwnerErrorHandler(t *testing.T) {
 	DeleteOwnerFunc = deleteOwnerResponseErrorMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(deleteOwnerHandler)
+	handler := http.HandlerFunc(DeleteOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -448,7 +449,7 @@ func TestDeleteOwnerErrorHandler(t *testing.T) {
 	}
 }
 
-func deleteOwnerResponseErrorMock(owner *Owner) error {
+func deleteOwnerResponseErrorMock(owner *models.Owner) error {
 	return errors.New("sql: Rows are closed")
 }
 
@@ -464,7 +465,7 @@ func TestGetAllTeasHandler(t *testing.T) {
 	GetAllTeasFunc = allTeasResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getAllTeasHandler)
+	handler := http.HandlerFunc(GetAllTeasHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -477,10 +478,10 @@ func TestGetAllTeasHandler(t *testing.T) {
 	}
 }
 
-func allTeasResponseMock() ([]Tea, error) {
-	tea1 := Tea{ID: 1, Name: "Snowball", TeaType: TeaType{ID: 1, Name: "Black Tea"}}
-	tea2 := Tea{ID: 2, Name: "Nearly Nirvana", TeaType: TeaType{ID: 2, Name: "White Tea"}}
-	return []Tea{tea1, tea2}, nil
+func allTeasResponseMock() ([]models.Tea, error) {
+	tea1 := models.Tea{ID: 1, Name: "Snowball", TeaType: models.TeaType{ID: 1, Name: "Black Tea"}}
+	tea2 := models.Tea{ID: 2, Name: "Nearly Nirvana", TeaType: models.TeaType{ID: 2, Name: "White Tea"}}
+	return []models.Tea{tea1, tea2}, nil
 }
 
 func TestGetTeaHandler(t *testing.T) {
@@ -498,7 +499,7 @@ func TestGetTeaHandler(t *testing.T) {
 	GetTeaFunc = getTeaResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getTeaHandler)
+	handler := http.HandlerFunc(GetTeaHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -511,7 +512,7 @@ func TestGetTeaHandler(t *testing.T) {
 	}
 }
 
-func getTeaResponseMock(tea *Tea) error {
+func getTeaResponseMock(tea *models.Tea) error {
 	tea.Name = "Snowball"
 	tea.TeaType.ID = 1
 	tea.TeaType.Name = "Black Tea"
@@ -533,7 +534,7 @@ func TestGetTeaHandlerError(t *testing.T) {
 	GetTeaFunc = getTeaResponseErrorMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getTeaHandler)
+	handler := http.HandlerFunc(GetTeaHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -546,7 +547,7 @@ func TestGetTeaHandlerError(t *testing.T) {
 	}
 }
 
-func getTeaResponseErrorMock(tea *Tea) error {
+func getTeaResponseErrorMock(tea *models.Tea) error {
 	return sql.ErrNoRows
 }
 
@@ -562,7 +563,7 @@ func TestCreateTeaHandler(t *testing.T) {
 	CreateTeaFunc = createTeaResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(createTeaHandler)
+	handler := http.HandlerFunc(CreateTeaHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusCreated {
@@ -575,7 +576,7 @@ func TestCreateTeaHandler(t *testing.T) {
 	}
 }
 
-func createTeaResponseMock(tea *Tea) error {
+func createTeaResponseMock(tea *models.Tea) error {
 	tea.ID = 1
 	tea.TeaType.Name = "Black Tea"
 	return nil
@@ -593,7 +594,7 @@ func TestErrorCreateTeaHandler(t *testing.T) {
 	CreateTeaFunc = createTeaResponseErrorMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(createTeaHandler)
+	handler := http.HandlerFunc(CreateTeaHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -606,7 +607,7 @@ func TestErrorCreateTeaHandler(t *testing.T) {
 	}
 }
 
-func createTeaResponseErrorMock(tea *Tea) error {
+func createTeaResponseErrorMock(tea *models.Tea) error {
 	return errors.New("Error")
 }
 
@@ -625,7 +626,7 @@ func TestDeleteTeaHandler(t *testing.T) {
 	DeleteTeaFunc = deleteTeaResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(deleteTeaHandler)
+	handler := http.HandlerFunc(DeleteTeaHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -638,7 +639,7 @@ func TestDeleteTeaHandler(t *testing.T) {
 	}
 }
 
-func deleteTeaResponseMock(tea *Tea) error {
+func deleteTeaResponseMock(tea *models.Tea) error {
 	tea.Name = "Snowball"
 	return nil
 }
@@ -658,7 +659,7 @@ func TestDeleteTeaErrorHandler(t *testing.T) {
 	DeleteTeaFunc = deleteTeaResponseErrorMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(deleteTeaHandler)
+	handler := http.HandlerFunc(DeleteTeaHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -671,7 +672,7 @@ func TestDeleteTeaErrorHandler(t *testing.T) {
 	}
 }
 
-func deleteTeaResponseErrorMock(tea *Tea) error {
+func deleteTeaResponseErrorMock(tea *models.Tea) error {
 	return errors.New("sql: Rows are closed")
 }
 
@@ -690,7 +691,7 @@ func TestGetTeaOwnersHandler(t *testing.T) {
 	GetTeaOwnersFunc = getTeaOwnersResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getTeaOwnersHandler)
+	handler := http.HandlerFunc(GetTeaOwnersHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -703,10 +704,10 @@ func TestGetTeaOwnersHandler(t *testing.T) {
 	}
 }
 
-func getTeaOwnersResponseMock(tea *Tea) ([]Owner, error) {
-	owner1 := Owner{ID: 1, Name: "John"}
-	owner2 := Owner{ID: 2, Name: "Jane"}
-	return []Owner{owner1, owner2}, nil
+func getTeaOwnersResponseMock(tea *models.Tea) ([]models.Owner, error) {
+	owner1 := models.Owner{ID: 1, Name: "John"}
+	owner2 := models.Owner{ID: 2, Name: "Jane"}
+	return []models.Owner{owner1, owner2}, nil
 }
 
 func TestGetTeaOwnersErrorHandler(t *testing.T) {
@@ -724,7 +725,7 @@ func TestGetTeaOwnersErrorHandler(t *testing.T) {
 	GetTeaOwnersFunc = getTeaOwnersErrorResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getTeaOwnersHandler)
+	handler := http.HandlerFunc(GetTeaOwnersHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -737,7 +738,7 @@ func TestGetTeaOwnersErrorHandler(t *testing.T) {
 	}
 }
 
-func getTeaOwnersErrorResponseMock(tea *Tea) ([]Owner, error) {
+func getTeaOwnersErrorResponseMock(tea *models.Tea) ([]models.Owner, error) {
 	return nil, errors.New("Error")
 }
 
@@ -753,7 +754,7 @@ func TestGetAllTeaOwnersHandler(t *testing.T) {
 	GetAllTeaOwnersFunc = getAllTeaOwnersResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getAllTeaOwnersHandler)
+	handler := http.HandlerFunc(GetAllTeaOwnersHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -770,16 +771,16 @@ func TestGetAllTeaOwnersHandler(t *testing.T) {
 	}
 }
 
-func getAllTeaOwnersResponseMock() ([]TeaWithOwners, error) {
-	tea1 := Tea{1, "Snowball", TeaType{1, "Black Tea"}}
-	tea2 := Tea{2, "Nearly Nirvana", TeaType{2, "White Tea"}}
-	tea3 := Tea{3, "Earl Grey", TeaType{1, "Black Tea"}}
-	owner1 := Owner{1, "John"}
-	owner2 := Owner{2, "Jane"}
-	teaWithOwners1 := TeaWithOwners{tea1, []Owner{owner1}}
-	teaWithOwners2 := TeaWithOwners{tea2, []Owner{owner1, owner2}}
-	teaWithOwners3 := TeaWithOwners{Tea: tea3, Owners: []Owner{}}
-	return []TeaWithOwners{teaWithOwners1, teaWithOwners2, teaWithOwners3}, nil
+func getAllTeaOwnersResponseMock() ([]models.TeaWithOwners, error) {
+	tea1 := models.Tea{ID: 1, Name: "Snowball", TeaType: models.TeaType{ID: 1, Name: "Black Tea"}}
+	tea2 := models.Tea{ID: 2, Name: "Nearly Nirvana", TeaType: models.TeaType{ID: 2, Name: "White Tea"}}
+	tea3 := models.Tea{ID: 3, Name: "Earl Grey", TeaType: models.TeaType{ID: 1, Name: "Black Tea"}}
+	owner1 := models.Owner{ID: 1, Name: "John"}
+	owner2 := models.Owner{ID: 2, Name: "Jane"}
+	teaWithOwners1 := models.TeaWithOwners{Tea: tea1, Owners: []models.Owner{owner1}}
+	teaWithOwners2 := models.TeaWithOwners{Tea: tea2, Owners: []models.Owner{owner1, owner2}}
+	teaWithOwners3 := models.TeaWithOwners{Tea: tea3, Owners: []models.Owner{}}
+	return []models.TeaWithOwners{teaWithOwners1, teaWithOwners2, teaWithOwners3}, nil
 }
 
 func TestCreateTeaOwnerHandler(t *testing.T) {
@@ -797,7 +798,7 @@ func TestCreateTeaOwnerHandler(t *testing.T) {
 	CreateTeaOwnerFunc = createTeaOwnerResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(createTeaOwnerHandler)
+	handler := http.HandlerFunc(CreateTeaOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusCreated {
@@ -810,8 +811,8 @@ func TestCreateTeaOwnerHandler(t *testing.T) {
 	}
 }
 
-func createTeaOwnerResponseMock(teaID int, owner *Owner) (Tea, error) {
-	return Tea{ID: 1, Name: "Snowball", TeaType: TeaType{ID: 1, Name: "Black Tea"}}, nil
+func createTeaOwnerResponseMock(teaID int, owner *models.Owner) (models.Tea, error) {
+	return models.Tea{ID: 1, Name: "Snowball", TeaType: models.TeaType{ID: 1, Name: "Black Tea"}}, nil
 }
 
 func TestCreateTeaOwnerErrorHandler(t *testing.T) {
@@ -829,7 +830,7 @@ func TestCreateTeaOwnerErrorHandler(t *testing.T) {
 	CreateTeaOwnerFunc = createTeaOwnerResponseErrorMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(createTeaOwnerHandler)
+	handler := http.HandlerFunc(CreateTeaOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -842,8 +843,8 @@ func TestCreateTeaOwnerErrorHandler(t *testing.T) {
 	}
 }
 
-func createTeaOwnerResponseErrorMock(teaID int, owner *Owner) (Tea, error) {
-	tea := new(Tea)
+func createTeaOwnerResponseErrorMock(teaID int, owner *models.Owner) (models.Tea, error) {
+	tea := new(models.Tea)
 	return *tea, errors.New("Error")
 }
 
@@ -862,7 +863,7 @@ func TestDeleteTeaOwnerHandler(t *testing.T) {
 	DeleteTeaOwnerFunc = deleteTeaOwnerResponseMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(deleteTeaOwnerHandler)
+	handler := http.HandlerFunc(DeleteTeaOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
@@ -875,7 +876,7 @@ func TestDeleteTeaOwnerHandler(t *testing.T) {
 	}
 }
 
-func deleteTeaOwnerResponseMock(tea *Tea, owner *Owner) error {
+func deleteTeaOwnerResponseMock(tea *models.Tea, owner *models.Owner) error {
 	return nil
 }
 
@@ -894,7 +895,7 @@ func TestDeleteTeaOwnerErrorHandler(t *testing.T) {
 	DeleteTeaOwnerFunc = deleteTeaOwnerResponseErrorMock
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(deleteTeaOwnerHandler)
+	handler := http.HandlerFunc(DeleteTeaOwnerHandler)
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusInternalServerError {
@@ -907,6 +908,6 @@ func TestDeleteTeaOwnerErrorHandler(t *testing.T) {
 	}
 }
 
-func deleteTeaOwnerResponseErrorMock(tea *Tea, owner *Owner) error {
+func deleteTeaOwnerResponseErrorMock(tea *models.Tea, owner *models.Owner) error {
 	return errors.New("sql: Rows are closed")
 }

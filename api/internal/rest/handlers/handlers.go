@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"database/sql"
@@ -8,57 +8,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BreD1810/tea-selector/api/internal/database"
+	"github.com/BreD1810/tea-selector/api/internal/models"
+	"github.com/BreD1810/tea-selector/api/internal/rest/middleware"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// A UserLogin stores the username and password for a user
-type UserLogin struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
 
 // A NewPasswordRequest stores the old and new password for a reset request.
 type NewPasswordRequest struct {
 	OldPassword string `json:"old"`
 	NewPassword string `json:"new"`
-}
-
-// A TeaType gives the ID and name for a type of tea.
-type TeaType struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-// A Tea details a tea within the system, with an ID, name and type of the tea.
-type Tea struct {
-	ID      int     `json:"id"`
-	Name    string  `json:"name"`
-	TeaType TeaType `json:"type"`
-}
-
-// An Owner is someone who has some tea that is in the system.
-type Owner struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-// A TeaWithOwners details a relationship between a tea Owner and a Tea.
-type TeaWithOwners struct {
-	Tea    Tea     `json:"tea"`
-	Owners []Owner `json:"owners"`
-}
-
-// A TypeWithTeas details all the teas of a single type.
-type TypeWithTeas struct {
-	Type TeaType `json:"type"`
-	Teas []Tea   `json:"teas"`
-}
-
-// A OwnerWithTeas details all the teas for an owner.
-type OwnerWithTeas struct {
-	Owner Owner `json:"owner"`
-	Teas  []Tea `json:"teas"`
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -73,10 +33,10 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	_, _ = w.Write(response)
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /login"`)
 
-	var userLogin UserLogin
+	var userLogin models.UserLogin
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&userLogin); err != nil {
 		log.Println("Failed to extract username and password")
@@ -88,7 +48,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	userLogin.Username = strings.ToLower(userLogin.Username)
 
 	// Retrieve from DB
-	storedPassword, err := GetPasswordFromDatabase(userLogin.Username)
+	storedPassword, err := database.GetPasswordFromDatabase(userLogin.Username)
 	if err != nil {
 		log.Printf("Failed to get password from database for user %q\n", userLogin.Username)
 		respondWithError(w, http.StatusBadRequest, "User doesn't exist")
@@ -104,7 +64,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validToken, err := GenerateJWT(userLogin.Username)
+	validToken, err := middleware.GenerateJWT(userLogin.Username)
 	if err != nil {
 		log.Printf("Error generating token: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, "Error generating token")
@@ -115,10 +75,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"token": validToken})
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request) {
+func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /register"`)
 
-	var userLogin UserLogin
+	var userLogin models.UserLogin
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&userLogin); err != nil {
 		log.Println(`Failed to extract username and password`)
@@ -138,13 +98,13 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userLogin.Password = string(hash)
-	if err := CreateUserInDatabase(userLogin); err != nil {
+	if err := database.CreateUserInDatabase(userLogin); err != nil {
 		log.Printf("Error creating user: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	validToken, err := GenerateJWT(userLogin.Username)
+	validToken, err := middleware.GenerateJWT(userLogin.Username)
 	if err != nil {
 		log.Printf("Error generating token: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, "Error generating token")
@@ -155,7 +115,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"token": validToken})
 }
 
-func changePasswordHandler(w http.ResponseWriter, r *http.Request) {
+func ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /changepassword"`)
 
 	var newPasswordBody NewPasswordRequest
@@ -168,7 +128,7 @@ func changePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Get the username of the JWT
-	username, err := GetJWTUser(r.Header["Token"][0])
+	username, err := middleware.GetJWTUser(r.Header["Token"][0])
 	if err != nil {
 		log.Println("Unable to change password")
 		respondWithError(w, http.StatusInternalServerError, "Error changing user password")
@@ -176,7 +136,7 @@ func changePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve old password from DB
-	storedPassword, err := GetPasswordFromDatabase(username)
+	storedPassword, err := database.GetPasswordFromDatabase(username)
 	if err != nil {
 		log.Printf("Failed to get password from database for user %q\n", username)
 		respondWithError(w, http.StatusBadRequest, "User doesn't exist")
@@ -202,7 +162,7 @@ func changePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	newPassword := string(hash)
 
-	if err := ChangePasswordInDatabase(username, newPassword); err != nil {
+	if err := database.ChangePasswordInDatabase(username, newPassword); err != nil {
 		log.Printf("Error changing password: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, "Error changing user password")
 		return
@@ -212,9 +172,9 @@ func changePasswordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllTeaTypesFunc points to the function to get all tea typevalues. Useful for mocking
-var GetAllTeaTypesFunc = GetAllTeaTypesFromDatabase
+var GetAllTeaTypesFunc = database.GetAllTeaTypesFromDatabase
 
-func getAllTeaTypesHandler(w http.ResponseWriter, r *http.Request) {
+func GetAllTeaTypesHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "GET /types"`)
 
 	types, err := GetAllTeaTypesFunc()
@@ -228,9 +188,9 @@ func getAllTeaTypesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetTeaTypeFunc points to the function to get information about a tea type. Useful for mocking.
-var GetTeaTypeFunc = GetTeaTypeFromDatabase
+var GetTeaTypeFunc = database.GetTeaTypeFromDatabase
 
-func getTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
+func GetTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -240,7 +200,7 @@ func getTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Received request \"GET /type/%d\"\n", id)
 
-	teaType := TeaType{ID: id}
+	teaType := models.TeaType{ID: id}
 
 	if err := GetTeaTypeFunc(&teaType); err != nil {
 		if err == sql.ErrNoRows {
@@ -258,12 +218,12 @@ func getTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateTeaTypeFunc points to the function to create a new type of tea in the database. Useful for mocking.
-var CreateTeaTypeFunc = CreateTeaTypeInDatabase
+var CreateTeaTypeFunc = database.CreateTeaTypeInDatabase
 
-func createTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
+func CreateTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /type"`)
 
-	var teaType TeaType
+	var teaType models.TeaType
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&teaType); err != nil {
 		log.Printf("Failed to create new tea type: %s\n", teaType.Name)
@@ -283,9 +243,9 @@ func createTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteTeaTypeFunc points to the function to delete a type of tea in the database. Useful for mocking.
-var DeleteTeaTypeFunc = DeleteTeaTypeInDatabase
+var DeleteTeaTypeFunc = database.DeleteTeaTypeInDatabase
 
-func deleteTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -295,7 +255,7 @@ func deleteTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Received request \"DELETE /type/%d\"\n", id)
 
-	teaType := TeaType{ID: id}
+	teaType := models.TeaType{ID: id}
 
 	if err := DeleteTeaTypeFunc(&teaType); err != nil {
 		if err.Error() == "sql: Rows are closed" {
@@ -313,9 +273,9 @@ func deleteTeaTypeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllOwnersFunc points to a function to get all owners in the database. Useful for mocking.
-var GetAllOwnersFunc = GetAllOwnersFromDatabase
+var GetAllOwnersFunc = database.GetAllOwnersFromDatabase
 
-func getAllOwnersHandler(w http.ResponseWriter, r *http.Request) {
+func GetAllOwnersHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "GET /owners"`)
 
 	owners, err := GetAllOwnersFunc()
@@ -329,9 +289,9 @@ func getAllOwnersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetOwnerFunc points to a function to get information about an owner from the database. Useful for mocking
-var GetOwnerFunc = GetOwnerFromDatabase
+var GetOwnerFunc = database.GetOwnerFromDatabase
 
-func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func GetOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -341,7 +301,7 @@ func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Received request \"GET /owner/%d\"\n", id)
 
-	owner := Owner{ID: id}
+	owner := models.Owner{ID: id}
 
 	if err := GetOwnerFunc(&owner); err != nil {
 		if err == sql.ErrNoRows {
@@ -359,12 +319,12 @@ func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateOwnerFunc points to a function that creates an owner in the database. Useful for mocking.
-var CreateOwnerFunc = CreateOwnerInDatabase
+var CreateOwnerFunc = database.CreateOwnerInDatabase
 
-func createOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func CreateOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /owner"`)
 
-	var owner Owner
+	var owner models.Owner
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&owner); err != nil {
 		log.Printf("Failed to create new owner: %s\n", owner.Name)
@@ -384,9 +344,9 @@ func createOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteOwnerFunc points to a function to delete an owner from the database. Useful for mocking.
-var DeleteOwnerFunc = DeleteOwnerFromDatabase
+var DeleteOwnerFunc = database.DeleteOwnerFromDatabase
 
-func deleteOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -396,7 +356,7 @@ func deleteOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Received request \"DELETE /owner/%d\"\n", id)
 
-	owner := Owner{ID: id}
+	owner := models.Owner{ID: id}
 
 	if err := DeleteOwnerFunc(&owner); err != nil {
 		if err.Error() == "sql: Rows are closed" {
@@ -414,9 +374,9 @@ func deleteOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllTeasFunc points to a function to get all teas in the database. Useful for mocking.
-var GetAllTeasFunc = GetAllTeasFromDatabase
+var GetAllTeasFunc = database.GetAllTeasFromDatabase
 
-func getAllTeasHandler(w http.ResponseWriter, r *http.Request) {
+func GetAllTeasHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "GET /teas"`)
 
 	teas, err := GetAllTeasFunc()
@@ -430,9 +390,9 @@ func getAllTeasHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetTeaFunc points to a function to get information about a tea from the database. Useful for mocking.
-var GetTeaFunc = GetTeaFromDatabase
+var GetTeaFunc = database.GetTeaFromDatabase
 
-func getTeaHandler(w http.ResponseWriter, r *http.Request) {
+func GetTeaHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -442,7 +402,7 @@ func getTeaHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Received request \"GET /tea/%d\"\n", id)
 
-	tea := Tea{ID: id}
+	tea := models.Tea{ID: id}
 
 	if err := GetTeaFunc(&tea); err != nil {
 		if err == sql.ErrNoRows {
@@ -460,12 +420,12 @@ func getTeaHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateTeaFunc points to a function to create a tea in the database. Useful for mocking.
-var CreateTeaFunc = CreateTeaInDatabase
+var CreateTeaFunc = database.CreateTeaInDatabase
 
-func createTeaHandler(w http.ResponseWriter, r *http.Request) {
+func CreateTeaHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /tea"`)
 
-	var tea Tea
+	var tea models.Tea
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&tea); err != nil {
 		log.Printf("Failed to create new tea: %s\n", tea.Name)
@@ -485,9 +445,9 @@ func createTeaHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteTeaFunc points to a function to delete a tea from the database. Useful for mocking.
-var DeleteTeaFunc = DeleteTeaFromDatabase
+var DeleteTeaFunc = database.DeleteTeaFromDatabase
 
-func deleteTeaHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteTeaHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -497,7 +457,7 @@ func deleteTeaHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Received request \"DELETE /tea/%d\"\n", id)
 
-	tea := Tea{ID: id}
+	tea := models.Tea{ID: id}
 
 	if err := DeleteTeaFunc(&tea); err != nil {
 		if err.Error() == "sql: Rows are closed" {
@@ -515,9 +475,9 @@ func deleteTeaHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetTeaOwnersFunc points to a function to get owners of a tea from the database. Useful for mocking.
-var GetTeaOwnersFunc = GetTeaOwnersFromDatabase
+var GetTeaOwnersFunc = database.GetTeaOwnersFromDatabase
 
-func getTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
+func GetTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -527,7 +487,7 @@ func getTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Received request \"GET /tea/%d/owners\"\n", id)
 
-	tea := Tea{ID: id}
+	tea := models.Tea{ID: id}
 
 	owners, err := GetTeaOwnersFunc(&tea)
 	if err != nil {
@@ -546,9 +506,9 @@ func getTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllTeaOwnersFunc points to a function to get a list of teas and their owners. Useful for mocking.
-var GetAllTeaOwnersFunc = GetAllTeaOwnersFromDatabase
+var GetAllTeaOwnersFunc = database.GetAllTeaOwnersFromDatabase
 
-func getAllTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
+func GetAllTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "GET /tea/owners"`)
 
 	teasWithOwners, err := GetAllTeaOwnersFunc()
@@ -562,9 +522,9 @@ func getAllTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateTeaOwnerFunc points to a function to add an owner to a tea in the database. Useful for mocking.
-var CreateTeaOwnerFunc = CreateTeaOwnerInDatabase
+var CreateTeaOwnerFunc = database.CreateTeaOwnerInDatabase
 
-func createTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func CreateTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -574,7 +534,7 @@ func createTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Received request \"POST /tea/%d/owner\n\"", id)
 
-	var owner Owner
+	var owner models.Owner
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&owner); err != nil {
 		log.Printf("Failed to create new owner of tea with ID: %d\n", id)
@@ -595,9 +555,9 @@ func createTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteTeaOwnerFunc points to a function to delete an owner from a tea in the database. Useful for mocking.
-var DeleteTeaOwnerFunc = DeleteTeaOwnerFromDatabase
+var DeleteTeaOwnerFunc = database.DeleteTeaOwnerFromDatabase
 
-func deleteTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	teaID, err := strconv.Atoi(vars["teaID"])
 	if err != nil {
@@ -613,8 +573,8 @@ func deleteTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Received request \"DELETE /tea/%d/owner/%d\"\n", teaID, ownerID)
 
-	tea := Tea{ID: teaID}
-	owner := Owner{ID: ownerID}
+	tea := models.Tea{ID: teaID}
+	owner := models.Owner{ID: ownerID}
 
 	if err := DeleteTeaOwnerFunc(&tea, &owner); err != nil {
 		if err.Error() == "sql: Rows are closed" {
@@ -632,9 +592,9 @@ func deleteTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllTypesTeasFunc Func gets all teas by type from the database. Useful for mocking.
-var GetAllTypesTeasFunc = GetAllTypesTeasFromDatabase
+var GetAllTypesTeasFunc = database.GetAllTypesTeasFromDatabase
 
-func getAllTeasTypesHandler(w http.ResponseWriter, r *http.Request) {
+func GetAllTeasTypesHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "GET /types/teas"`)
 
 	typesWithTeas, err := GetAllTypesTeasFunc()
@@ -648,9 +608,9 @@ func getAllTeasTypesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllOwnersTeasFunc gets a list of owners, and their teas. Useful for mocking
-var GetAllOwnersTeasFunc = GetAllOwnersTeasFromDatabase
+var GetAllOwnersTeasFunc = database.GetAllOwnersTeasFromDatabase
 
-func getAllOwnersTeasHandler(w http.ResponseWriter, r *http.Request) {
+func GetAllOwnersTeasHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Receieved request "GET /owners/teas"`)
 
 	ownersWithTeas, err := GetAllOwnersTeasFunc()

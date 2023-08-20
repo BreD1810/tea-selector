@@ -1,6 +1,7 @@
-package main
+package middleware
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -58,7 +59,7 @@ func GetJWTUser(tokenString string) (string, error) {
 	return username, nil
 }
 
-func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
+func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
 			token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
@@ -80,4 +81,16 @@ func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 			respondWithError(w, http.StatusBadRequest, "Not Authorized")
 		}
 	})
+}
+
+func respondWithError(w http.ResponseWriter, code int, message string) {
+	respondWithJSON(w, code, map[string]string{"error": message})
+}
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	_, _ = w.Write(response)
 }

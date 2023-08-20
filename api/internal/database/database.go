@@ -1,4 +1,4 @@
-package main
+package database
 
 import (
 	"database/sql"
@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/BreD1810/tea-selector/api/internal/config"
+	"github.com/BreD1810/tea-selector/api/internal/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -19,7 +21,7 @@ func checkError(s string, e error) {
 	}
 }
 
-func initialiseDatabase(cfg Config) {
+func InitialiseDatabase(cfg config.Config) {
 	log.Println("Initialising the database...")
 
 	// Check if the database doesn't exists
@@ -37,7 +39,7 @@ func initialiseDatabase(cfg Config) {
 	log.Println("Database initialised.")
 }
 
-func createDatabase(cfg Config) {
+func createDatabase(cfg config.Config) {
 	database, err := sql.Open("sqlite3", cfg.Database.Location)
 	checkError("creating database", err)
 	DB = database
@@ -154,7 +156,7 @@ func GetPasswordFromDatabase(user string) (string, error) {
 }
 
 // CreateUserInDatabase creates a user in the database using a username and pre-hashed password
-func CreateUserInDatabase(user UserLogin) error {
+func CreateUserInDatabase(user models.UserLogin) error {
 	if _, err := DB.Exec("INSERT INTO user(username, password) VALUES ($1, $2)", user.Username, user.Password); err != nil {
 		return err
 	}
@@ -171,16 +173,16 @@ func ChangePasswordInDatabase(username string, password string) error {
 }
 
 // GetAllTeaTypesFromDatabase retrieves all the tea types available in the database.
-func GetAllTeaTypesFromDatabase() ([]TeaType, error) {
+func GetAllTeaTypesFromDatabase() ([]models.TeaType, error) {
 	rows, err := DB.Query("SELECT * FROM types;")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	teaTypes := make([]TeaType, 0)
+	teaTypes := make([]models.TeaType, 0)
 	for rows.Next() {
-		teaType := new(TeaType)
+		teaType := new(models.TeaType)
 		err := rows.Scan(&teaType.ID, &teaType.Name)
 		if err != nil {
 			return nil, err
@@ -191,7 +193,7 @@ func GetAllTeaTypesFromDatabase() ([]TeaType, error) {
 }
 
 // GetTeaTypeFromDatabase retrieves a tea type from the database.
-func GetTeaTypeFromDatabase(teaType *TeaType) error {
+func GetTeaTypeFromDatabase(teaType *models.TeaType) error {
 	row := DB.QueryRow("SELECT name FROM types WHERE id=$1;", teaType.ID)
 
 	err := row.Scan(&teaType.Name)
@@ -203,7 +205,7 @@ func GetTeaTypeFromDatabase(teaType *TeaType) error {
 }
 
 // CreateTeaTypeInDatabase adds a new tea type to the database
-func CreateTeaTypeInDatabase(teaType *TeaType) error {
+func CreateTeaTypeInDatabase(teaType *models.TeaType) error {
 	_, err := DB.Exec("INSERT INTO types (name) VALUES ($1);", teaType.Name)
 	if err != nil {
 		return err
@@ -226,7 +228,7 @@ func CreateTeaTypeInDatabase(teaType *TeaType) error {
 }
 
 // DeleteTeaTypeInDatabase deletes a tea type from the database.
-func DeleteTeaTypeInDatabase(teaType *TeaType) error {
+func DeleteTeaTypeInDatabase(teaType *models.TeaType) error {
 	rows, err := DB.Query("SELECT name FROM types WHERE id=$1;", teaType.ID)
 	if err != nil {
 		return err
@@ -244,16 +246,16 @@ func DeleteTeaTypeInDatabase(teaType *TeaType) error {
 }
 
 // GetAllOwnersFromDatabase gets all the owners from the database.
-func GetAllOwnersFromDatabase() ([]Owner, error) {
+func GetAllOwnersFromDatabase() ([]models.Owner, error) {
 	rows, err := DB.Query("SELECT * FROM owner;")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	owners := make([]Owner, 0)
+	owners := make([]models.Owner, 0)
 	for rows.Next() {
-		owner := new(Owner)
+		owner := new(models.Owner)
 		err := rows.Scan(&owner.ID, &owner.Name)
 		if err != nil {
 			return nil, err
@@ -264,7 +266,7 @@ func GetAllOwnersFromDatabase() ([]Owner, error) {
 }
 
 // GetOwnerFromDatabase gets an owner from the database by their ID.
-func GetOwnerFromDatabase(owner *Owner) error {
+func GetOwnerFromDatabase(owner *models.Owner) error {
 	row := DB.QueryRow("SELECT name FROM owner WHERE id=$1;", owner.ID)
 
 	err := row.Scan(&owner.Name)
@@ -276,7 +278,7 @@ func GetOwnerFromDatabase(owner *Owner) error {
 }
 
 // CreateOwnerInDatabase adds a new owner to the database
-func CreateOwnerInDatabase(owner *Owner) error {
+func CreateOwnerInDatabase(owner *models.Owner) error {
 	_, err := DB.Exec("INSERT INTO owner (name) VALUES ($1);", owner.Name)
 	if err != nil {
 		return err
@@ -299,7 +301,7 @@ func CreateOwnerInDatabase(owner *Owner) error {
 }
 
 // DeleteOwnerFromDatabase deletes an owner from the database.
-func DeleteOwnerFromDatabase(owner *Owner) error {
+func DeleteOwnerFromDatabase(owner *models.Owner) error {
 	rows, err := DB.Query("SELECT name FROM owner WHERE id=$1;", owner.ID)
 	if err != nil {
 		return err
@@ -317,16 +319,16 @@ func DeleteOwnerFromDatabase(owner *Owner) error {
 }
 
 // GetAllTeasFromDatabase gets all the teas from the database.
-func GetAllTeasFromDatabase() ([]Tea, error) {
+func GetAllTeasFromDatabase() ([]models.Tea, error) {
 	rows, err := DB.Query("SELECT tea.id, tea.name, types.id, types.name FROM tea INNER JOIN types ON types.ID = tea.teaType;")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	teas := make([]Tea, 0)
+	teas := make([]models.Tea, 0)
 	for rows.Next() {
-		tea := new(Tea)
+		tea := new(models.Tea)
 		err := rows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
 		if err != nil {
 			return nil, err
@@ -338,7 +340,7 @@ func GetAllTeasFromDatabase() ([]Tea, error) {
 }
 
 // GetTeaFromDatabase gets information about a tea from the database using it's ID
-func GetTeaFromDatabase(tea *Tea) error {
+func GetTeaFromDatabase(tea *models.Tea) error {
 	row := DB.QueryRow("SELECT tea.name, types.id, types.name FROM tea INNER JOIN types ON tea.teaType=types.id WHERE tea.teaType=$1", tea.ID)
 
 	err := row.Scan(&tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
@@ -350,7 +352,7 @@ func GetTeaFromDatabase(tea *Tea) error {
 }
 
 // CreateTeaInDatabase creates a new tea in the database. Uses the type ID to do so.
-func CreateTeaInDatabase(tea *Tea) error {
+func CreateTeaInDatabase(tea *models.Tea) error {
 	row := DB.QueryRow("SELECT name FROM types WHERE id = $1;", tea.TeaType.ID)
 	err := row.Scan(&tea.TeaType.Name)
 	if err != nil {
@@ -372,7 +374,7 @@ func CreateTeaInDatabase(tea *Tea) error {
 }
 
 // DeleteTeaFromDatabase deletes a tea from the database using it's ID.
-func DeleteTeaFromDatabase(tea *Tea) error {
+func DeleteTeaFromDatabase(tea *models.Tea) error {
 	rows, err := DB.Query("SELECT name FROM tea WHERE id=$1;", tea.ID)
 	if err != nil {
 		return err
@@ -390,16 +392,16 @@ func DeleteTeaFromDatabase(tea *Tea) error {
 }
 
 // GetTeaOwnersFromDatabase gets all owners of a tea using the tea's ID.
-func GetTeaOwnersFromDatabase(tea *Tea) ([]Owner, error) {
+func GetTeaOwnersFromDatabase(tea *models.Tea) ([]models.Owner, error) {
 	rows, err := DB.Query("SELECT owner.id, owner.name FROM teaOwners INNER JOIN owner ON teaOwners.ownerID = owner.id WHERE teaOwners.teaID = $1;", tea.ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	owners := make([]Owner, 0)
+	owners := make([]models.Owner, 0)
 	for rows.Next() {
-		owner := new(Owner)
+		owner := new(models.Owner)
 		err := rows.Scan(&owner.ID, &owner.Name)
 		if err != nil {
 			return nil, err
@@ -411,16 +413,16 @@ func GetTeaOwnersFromDatabase(tea *Tea) ([]Owner, error) {
 }
 
 // GetAllTeaOwnersFromDatabase gets all owners for all teas.
-func GetAllTeaOwnersFromDatabase() ([]TeaWithOwners, error) {
+func GetAllTeaOwnersFromDatabase() ([]models.TeaWithOwners, error) {
 	teaRows, err := DB.Query("SELECT tea.id, tea.name, tea.teaType, types.name FROM tea INNER JOIN types on types.id = tea.teaType;")
 	if err != nil {
 		return nil, err
 	}
 	defer teaRows.Close()
 
-	teas := make([]Tea, 0)
+	teas := make([]models.Tea, 0)
 	for teaRows.Next() {
-		tea := new(Tea)
+		tea := new(models.Tea)
 
 		err := teaRows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
 		if err != nil {
@@ -430,22 +432,22 @@ func GetAllTeaOwnersFromDatabase() ([]TeaWithOwners, error) {
 		teas = append(teas, *tea)
 	}
 
-	teasWithOwners := make([]TeaWithOwners, 0)
+	teasWithOwners := make([]models.TeaWithOwners, 0)
 	for _, tea := range teas {
 		owners, err := GetTeaOwnersFromDatabase(&tea)
 		if err != nil {
 			return nil, err
 		}
 
-		teasWithOwners = append(teasWithOwners, TeaWithOwners{Tea: tea, Owners: owners})
+		teasWithOwners = append(teasWithOwners, models.TeaWithOwners{Tea: tea, Owners: owners})
 	}
 
 	return teasWithOwners, nil
 }
 
 // CreateTeaOwnerInDatabase adds an owner to a tea in the database.
-func CreateTeaOwnerInDatabase(teaID int, owner *Owner) (Tea, error) {
-	tea := new(Tea)
+func CreateTeaOwnerInDatabase(teaID int, owner *models.Owner) (models.Tea, error) {
+	tea := new(models.Tea)
 
 	_, err := DB.Exec("INSERT INTO teaOwners VALUES ($1, $2);", teaID, owner.ID)
 	if err != nil {
@@ -468,22 +470,22 @@ func CreateTeaOwnerInDatabase(teaID int, owner *Owner) (Tea, error) {
 }
 
 // DeleteTeaOwnerFromDatabase deletes an owner of a tea from the database.
-func DeleteTeaOwnerFromDatabase(tea *Tea, owner *Owner) error {
+func DeleteTeaOwnerFromDatabase(tea *models.Tea, owner *models.Owner) error {
 	_, err := DB.Exec("DELETE FROM teaOwners WHERE teaID = $1 AND ownerID = $2;", tea.ID, owner.ID)
 	return err
 }
 
 // GetAllTypesTeasFromDatabase gets all teas by types.
-func GetAllTypesTeasFromDatabase() ([]TypeWithTeas, error) {
+func GetAllTypesTeasFromDatabase() ([]models.TypeWithTeas, error) {
 	rows, err := DB.Query("SELECT * FROM types;")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	typesWithTeas := make([]TypeWithTeas, 0)
+	typesWithTeas := make([]models.TypeWithTeas, 0)
 	for rows.Next() {
-		typeWithTeas := new(TypeWithTeas)
+		typeWithTeas := new(models.TypeWithTeas)
 		err := rows.Scan(&typeWithTeas.Type.ID, &typeWithTeas.Type.Name)
 		if err != nil {
 			return nil, err
@@ -499,7 +501,7 @@ func GetAllTypesTeasFromDatabase() ([]TypeWithTeas, error) {
 		}
 
 		for teaRows.Next() {
-			tea := new(Tea)
+			tea := new(models.Tea)
 			err := teaRows.Scan(&tea.ID, &tea.Name)
 			if err != nil {
 				return nil, err
@@ -514,17 +516,17 @@ func GetAllTypesTeasFromDatabase() ([]TypeWithTeas, error) {
 	return typesWithTeas, nil
 }
 
-// GetALlOwnersTeasFromDatabase gets all teas for each owner.
-func GetAllOwnersTeasFromDatabase() ([]OwnerWithTeas, error) {
+// GetAllOwnersTeasFromDatabase gets all teas for each owner.
+func GetAllOwnersTeasFromDatabase() ([]models.OwnerWithTeas, error) {
 	rows, err := DB.Query("SELECT * FROM owner;")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	ownersWithTeas := make([]OwnerWithTeas, 0)
+	ownersWithTeas := make([]models.OwnerWithTeas, 0)
 	for rows.Next() {
-		ownerWithTeas := new(OwnerWithTeas)
+		ownerWithTeas := new(models.OwnerWithTeas)
 		err := rows.Scan(&ownerWithTeas.Owner.ID, &ownerWithTeas.Owner.Name)
 		if err != nil {
 			return nil, err
@@ -540,7 +542,7 @@ func GetAllOwnersTeasFromDatabase() ([]OwnerWithTeas, error) {
 		}
 
 		for teaRows.Next() {
-			tea := new(Tea)
+			tea := new(models.Tea)
 			err := teaRows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
 			if err != nil {
 				return nil, err

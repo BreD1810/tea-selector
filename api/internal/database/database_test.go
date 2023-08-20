@@ -1,10 +1,11 @@
-package main
+package database
 
 import (
 	"database/sql"
 	"errors"
 	"testing"
 
+	"github.com/BreD1810/tea-selector/api/internal/models"
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
@@ -154,11 +155,11 @@ func TestGetAllTeaTypesFromDatabase(t *testing.T) {
 	if err != nil {
 		t.Errorf("Database returned unexpected error: %v\n", err)
 	}
-	expected := TeaType{1, "Black Tea"}
+	expected := models.TeaType{1, "Black Tea"}
 	if teaTypes[0] != expected {
 		t.Errorf("Database returned unexpected result:\n got: %v\n wanted: %v\n", teaTypes[0], expected)
 	}
-	expected = TeaType{2, "Green Tea"}
+	expected = models.TeaType{2, "Green Tea"}
 	if teaTypes[1] != expected {
 		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", teaTypes[1], expected)
 	}
@@ -181,7 +182,7 @@ func TestGetTeaTypeFromDatabase(t *testing.T) {
 	expected := "Black Tea"
 	rows := mock.NewRows([]string{"name"})
 	rows.AddRow(expected)
-	teaType := TeaType{ID: 1}
+	teaType := models.TeaType{ID: 1}
 
 	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnRows(rows)
 
@@ -211,7 +212,7 @@ func TestGetNonExistantTeaTypeFromDatabase(t *testing.T) {
 	expected := ""
 	rows := mock.NewRows([]string{"name"})
 	rows.AddRow(expected)
-	teaType := TeaType{ID: 1}
+	teaType := models.TeaType{ID: 1}
 
 	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnError(sql.ErrNoRows)
 
@@ -244,7 +245,7 @@ func TestCreateTeaTypeInDatabase(t *testing.T) {
 	mock.ExpectExec("INSERT INTO types").WithArgs("Black Tea").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectQuery("SELECT ID FROM types").WillReturnRows(rows)
 
-	teaType := TeaType{ID: 1, Name: teaName}
+	teaType := models.TeaType{ID: 1, Name: teaName}
 	err = CreateTeaTypeInDatabase(&teaType)
 	if err != nil {
 		t.Errorf("Error whilst trying to insert tea type into database: %v\n", err)
@@ -279,7 +280,7 @@ func TestDeleteTeaTypeInDatabase(t *testing.T) {
 	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnRows(rows)
 	mock.ExpectExec("DELETE FROM types").WithArgs(1).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	teaType := TeaType{ID: teaID}
+	teaType := models.TeaType{ID: teaID}
 	err = DeleteTeaTypeInDatabase(&teaType)
 	if err != nil {
 		t.Errorf("Error whilst trying to delete tea type from database: %v\n", err)
@@ -312,7 +313,7 @@ func TestDeleteNonExistantTeaTypeInDatabase(t *testing.T) {
 
 	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnRows(rows)
 
-	teaType := TeaType{ID: teaID}
+	teaType := models.TeaType{ID: teaID}
 	err = DeleteTeaTypeInDatabase(&teaType)
 	if err.Error() != "sql: Rows are closed" {
 		t.Errorf("Error whilst trying to delete tea type from database: %v\n", err)
@@ -349,11 +350,11 @@ func TestGetAllOwnersFromDatabase(t *testing.T) {
 	if err != nil {
 		t.Errorf("Database returned unexpected error: %v\n", err)
 	}
-	expected := Owner{1, "John"}
+	expected := models.Owner{1, "John"}
 	if owners[0] != expected {
 		t.Errorf("Database returned unexpected result:\n got: %v\n wanted: %v\n", owners[0], expected)
 	}
-	expected = Owner{2, "Jane"}
+	expected = models.Owner{2, "Jane"}
 	if owners[1] != expected {
 		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", owners[1], expected)
 	}
@@ -376,7 +377,7 @@ func TestGetOwnerFromDatabase(t *testing.T) {
 	expected := "John"
 	rows := mock.NewRows([]string{"name"})
 	rows.AddRow(expected)
-	owner := Owner{ID: 1}
+	owner := models.Owner{ID: 1}
 
 	mock.ExpectQuery("SELECT name FROM owner").WithArgs(1).WillReturnRows(rows)
 
@@ -406,7 +407,7 @@ func TestGetNonExistentOwnerFromDatabase(t *testing.T) {
 	expected := ""
 	rows := mock.NewRows([]string{"name"})
 	rows.AddRow(expected)
-	owner := Owner{ID: 1}
+	owner := models.Owner{ID: 1}
 
 	mock.ExpectQuery("SELECT name FROM owner").WithArgs(1).WillReturnError(sql.ErrNoRows)
 
@@ -439,7 +440,7 @@ func TestCreateOwnerInDatabase(t *testing.T) {
 	mock.ExpectExec("INSERT INTO owner").WithArgs(ownerName).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectQuery("SELECT ID FROM owner").WillReturnRows(rows)
 
-	owner := Owner{ID: 1, Name: ownerName}
+	owner := models.Owner{ID: 1, Name: ownerName}
 	err = CreateOwnerInDatabase(&owner)
 	if err != nil {
 		t.Errorf("Error whilst trying to insert tea type into database: %v\n", err)
@@ -474,7 +475,7 @@ func TestDeleteOwnerFromDatabase(t *testing.T) {
 	mock.ExpectQuery("SELECT name FROM owner").WithArgs(1).WillReturnRows(rows)
 	mock.ExpectExec("DELETE FROM owner").WithArgs(1).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	owner := Owner{ID: ownerID}
+	owner := models.Owner{ID: ownerID}
 	err = DeleteOwnerFromDatabase(&owner)
 	if err != nil {
 		t.Errorf("Error whilst trying to delete owner from database: %v\n", err)
@@ -507,7 +508,7 @@ func TestDeleteNonExistantOwnerFromDatabase(t *testing.T) {
 
 	mock.ExpectQuery("SELECT name FROM owner").WithArgs(1).WillReturnRows(rows)
 
-	owner := Owner{ID: ownerID}
+	owner := models.Owner{ID: ownerID}
 	err = DeleteOwnerFromDatabase(&owner)
 	if err.Error() != "sql: Rows are closed" {
 		t.Errorf("Error whilst trying to delete owner from database: %v\n", err)
@@ -544,11 +545,11 @@ func TestGetAllTeasFromDatabase(t *testing.T) {
 	if err != nil {
 		t.Errorf("Database returned unexpected error: %v\n", err)
 	}
-	expected := Tea{1, "Snowball", TeaType{1, "Black Tea"}}
+	expected := models.Tea{1, "Snowball", models.TeaType{1, "Black Tea"}}
 	if teas[0] != expected {
 		t.Errorf("Database returned unexpected result:\n got: %v\n wanted: %v\n", teas[0], expected)
 	}
-	expected = Tea{2, "Nearly Nirvana", TeaType{2, "White Tea"}}
+	expected = models.Tea{2, "Nearly Nirvana", models.TeaType{2, "White Tea"}}
 	if teas[1] != expected {
 		t.Errorf("Database returned unexpected result:\n got: %q\n wanted: %q\n", teas[1], expected)
 	}
@@ -572,7 +573,7 @@ func TestGetTeaFromDatabase(t *testing.T) {
 	expectedTeaName := "Snowball"
 	expectedTypeID := 1
 	expectedTypeName := "Black Tea"
-	tea := Tea{ID: expectedTeaID}
+	tea := models.Tea{ID: expectedTeaID}
 	rows := mock.NewRows([]string{"name", "id", "name"})
 	rows.AddRow(expectedTeaName, expectedTypeID, expectedTypeName)
 
@@ -613,7 +614,7 @@ func TestGetNonExistentTeaFromDatabase(t *testing.T) {
 	mock.ExpectQuery("SELECT (.)+ FROM tea").WithArgs(10).WillReturnError(sql.ErrNoRows)
 
 	expectedTeaID := 10
-	tea := Tea{ID: expectedTeaID}
+	tea := models.Tea{ID: expectedTeaID}
 	err = GetTeaFromDatabase(&tea)
 	if err != sql.ErrNoRows {
 		t.Errorf("Method returned unexpected error:\n got: %v\n wanted: %v\n", err, sql.ErrNoRows)
@@ -650,7 +651,7 @@ func TestCreateTeaInDatabase(t *testing.T) {
 	mock.ExpectExec("INSERT INTO tea").WithArgs(teaName, typeID).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectQuery("SELECT id FROM tea").WillReturnRows(teaRows)
 
-	tea := Tea{Name: teaName, TeaType: TeaType{ID: typeID}}
+	tea := models.Tea{Name: teaName, TeaType: models.TeaType{ID: typeID}}
 	err = CreateTeaInDatabase(&tea)
 	if err != nil {
 		t.Errorf("Error whilst trying to insert tea into database: %s\n", err)
@@ -689,7 +690,7 @@ func TestCreateTeaInDatabaseBadType(t *testing.T) {
 
 	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnError(sql.ErrNoRows)
 
-	tea := Tea{Name: teaName, TeaType: TeaType{ID: teaTypeID}}
+	tea := models.Tea{Name: teaName, TeaType: models.TeaType{ID: teaTypeID}}
 	err = CreateTeaInDatabase(&tea)
 	if err.Error() != expectedError {
 		t.Errorf("Wrong error returned:\n Got: %s\n Expected: %s\n", err, expectedError)
@@ -726,7 +727,7 @@ func TestCreateTeaInDatabaseInsertError(t *testing.T) {
 	mock.ExpectQuery("SELECT name FROM types").WithArgs(1).WillReturnRows(typeRows)
 	mock.ExpectExec("INSERT INTO tea").WithArgs(teaName, teaTypeID).WillReturnError(errors.New(expectedError))
 
-	tea := Tea{Name: teaName, TeaType: TeaType{ID: teaTypeID}}
+	tea := models.Tea{Name: teaName, TeaType: models.TeaType{ID: teaTypeID}}
 	err = CreateTeaInDatabase(&tea)
 	if err.Error() != expectedError {
 		t.Errorf("Wrong error returned:\n Got: %s\n Expected: %s\n", err, expectedError)
@@ -764,7 +765,7 @@ func TestDeleteTeaFromDatabase(t *testing.T) {
 	mock.ExpectQuery("SELECT name FROM tea").WithArgs(teaID).WillReturnRows(rows)
 	mock.ExpectExec("DELETE FROM tea").WithArgs(teaID).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	tea := Tea{ID: teaID}
+	tea := models.Tea{ID: teaID}
 	err = DeleteTeaFromDatabase(&tea)
 	if err != nil {
 		t.Errorf("Error whilst trying to delete tea from database: %v\n", err)
@@ -796,7 +797,7 @@ func TestDeleteNonExistantTeaFromDatabase(t *testing.T) {
 
 	mock.ExpectQuery("SELECT name FROM tea").WithArgs(teaID).WillReturnRows(rows)
 
-	tea := Tea{ID: teaID}
+	tea := models.Tea{ID: teaID}
 	err = DeleteTeaFromDatabase(&tea)
 	if err.Error() != "sql: Rows are closed" {
 		t.Errorf("Error whilst trying to delete tea from database: %v\n", err)
@@ -824,8 +825,8 @@ func TestGetTeaOwnerFromDatabase(t *testing.T) {
 	DB = db
 
 	expectedTeaID := 1
-	tea := Tea{ID: expectedTeaID}
-	expectedOwners := []Owner{{1, "John"}, {2, "Jane"}}
+	tea := models.Tea{ID: expectedTeaID}
+	expectedOwners := []models.Owner{{1, "John"}, {2, "Jane"}}
 	rows := mock.NewRows([]string{"id", "name"})
 	rows.AddRow(expectedOwners[0].ID, expectedOwners[0].Name)
 	rows.AddRow(expectedOwners[1].ID, expectedOwners[1].Name)
@@ -865,7 +866,7 @@ func TestGetNonExistentTeaOwnerFromDatabase(t *testing.T) {
 	DB = db
 
 	expectedTeaID := 1
-	tea := Tea{ID: expectedTeaID}
+	tea := models.Tea{ID: expectedTeaID}
 
 	mock.ExpectQuery("SELECT (.)+ FROM teaOwners").WithArgs(expectedTeaID).WillReturnError(sql.ErrNoRows)
 
@@ -890,7 +891,7 @@ func TestCreateTeaOwnerFromDatabase(t *testing.T) {
 	DB = db
 
 	teaID := 1
-	owner := Owner{ID: 1}
+	owner := models.Owner{ID: 1}
 	rows := mock.NewRows([]string{"id", "name", "typeID", "typeName"})
 	rows.AddRow(teaID, "Snowball", 1, "Black Tea")
 
@@ -930,11 +931,11 @@ func TestCreateTeaOwnerFromDatabaseRelationshipExists(t *testing.T) {
 	DB = db
 
 	teaID := 1
-	owner := Owner{ID: 1}
+	owner := models.Owner{ID: 1}
 
 	mock.ExpectExec("INSERT INTO teaOwners").WithArgs(teaID, owner.ID).WillReturnError(errors.New("UNIQUE constraint failed"))
 
-	if _,err := CreateTeaOwnerInDatabase(teaID, &owner); err.Error() != "This relationship already exists" {
+	if _, err := CreateTeaOwnerInDatabase(teaID, &owner); err.Error() != "This relationship already exists" {
 		t.Errorf("Database returned unexpected error: %v\n", err)
 	}
 
@@ -954,7 +955,7 @@ func TestCreateTeaOwnerFromDatabaseDoesntExists(t *testing.T) {
 	DB = db
 
 	teaID := 1
-	owner := Owner{ID: 1}
+	owner := models.Owner{ID: 1}
 
 	mock.ExpectExec("INSERT INTO teaOwners").WithArgs(teaID, owner.ID).WillReturnError(errors.New("FOREIGN KEY constraint failed"))
 
@@ -977,8 +978,8 @@ func TestDeleteTeaOwnerFromDatabase(t *testing.T) {
 	defer func() { DB = oldDB }()
 	DB = db
 
-	tea := Tea{ID: 1}
-	owner := Owner{ID: 1}
+	tea := models.Tea{ID: 1}
+	owner := models.Owner{ID: 1}
 
 	mock.ExpectExec("DELETE FROM tea").WithArgs(tea.ID, owner.ID).WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -1002,8 +1003,8 @@ func TestDeleteNonExistantTeaOwnerFromDatabase(t *testing.T) {
 	defer func() { DB = oldDB }()
 	DB = db
 
-	tea := Tea{ID: 1}
-	owner := Owner{ID: 1}
+	tea := models.Tea{ID: 1}
+	owner := models.Owner{ID: 1}
 
 	mock.ExpectExec("DELETE FROM tea").WithArgs(tea.ID, owner.ID).WillReturnError(sql.ErrNoRows)
 

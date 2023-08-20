@@ -28,8 +28,8 @@ api_build:
     image: golang
     script:
         - cd api
-        - env GOOS=linux GOARCH=amd64 go build -o output-amd64
-        - env GOOS=linux GOARCH=arm GOARM=7 go build -o output-pi3
+        - env GOOS=linux GOARCH=amd64 go build -o output-amd64 cmd/tea-selector/main.go
+        - env GOOS=linux GOARCH=arm GOARM=7 go build -o output-pi3 cmd/tea-selector/main.go
     artifacts:
         paths:
             - api/output-amd64
