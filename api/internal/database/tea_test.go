@@ -16,9 +16,9 @@ func TestCreateTeaTable(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	mock.ExpectExec(createTeaString).WillReturnResult(sqlmock.NewResult(0, 0))
 
@@ -35,9 +35,9 @@ func TestGetAllTeasFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	rows := mock.NewRows([]string{"id", "name", "id", "name"})
 	rows.AddRow("1", "Snowball", "1", "Black Tea")
@@ -69,9 +69,9 @@ func TestGetTeaFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	expectedTeaID := 1
 	expectedTeaName := "Snowball"
@@ -111,9 +111,9 @@ func TestGetNonExistentTeaFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	mock.ExpectQuery("SELECT (.)+ FROM tea").WithArgs(10).WillReturnError(sql.ErrNoRows)
 
@@ -138,9 +138,9 @@ func TestCreateTeaInDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	teaID := 1
 	teaName := "Snowball"
@@ -184,9 +184,9 @@ func TestCreateTeaInDatabaseBadType(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	teaName := "Snowball"
 	teaTypeID := 1
@@ -217,9 +217,9 @@ func TestCreateTeaInDatabaseInsertError(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	teaName := "Snowball"
 	teaTypeID := 1
@@ -257,9 +257,9 @@ func TestDeleteTeaFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	teaName := "Snowball"
 	teaID := 1
@@ -292,9 +292,9 @@ func TestDeleteNonExistantTeaFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	teaID := 1
 	rows := mock.NewRows([]string{"name"})

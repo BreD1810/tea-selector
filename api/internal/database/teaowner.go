@@ -2,12 +2,13 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/BreD1810/tea-selector/api/internal/models"
 )
 
-func createTeaOwnersTable() {
+func (db *Database) createTeaOwnersTable() error {
 	creationString := `CREATE TABLE teaOwners (
 							teaID INTEGER,
 							ownerID INTEGER,
@@ -19,13 +20,16 @@ func createTeaOwnersTable() {
 								ON UPDATE CASCADE
 								ON DELETE RESTRICT
 					   );`
-	_, err := DB.Exec(creationString)
-	checkError("creating owner table", err)
+	if _, err := db.DB.Exec(creationString); err != nil {
+		return fmt.Errorf("error creating owner table: %w", err)
+	}
+
+	return nil
 }
 
 // GetTeaOwnersFromDatabase gets all owners of a tea using the tea's ID.
-func GetTeaOwnersFromDatabase(tea *models.Tea) ([]models.Owner, error) {
-	rows, err := DB.Query("SELECT owner.id, owner.name FROM teaOwners INNER JOIN owner ON teaOwners.ownerID = owner.id WHERE teaOwners.teaID = $1;", tea.ID)
+func (db *Database) GetTeaOwnersFromDatabase(tea *models.Tea) ([]models.Owner, error) {
+	rows, err := db.DB.Query("SELECT owner.id, owner.name FROM teaOwners INNER JOIN owner ON teaOwners.ownerID = owner.id WHERE teaOwners.teaID = $1;", tea.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -34,8 +38,7 @@ func GetTeaOwnersFromDatabase(tea *models.Tea) ([]models.Owner, error) {
 	owners := make([]models.Owner, 0)
 	for rows.Next() {
 		owner := new(models.Owner)
-		err := rows.Scan(&owner.ID, &owner.Name)
-		if err != nil {
+		if err := rows.Scan(&owner.ID, &owner.Name); err != nil {
 			return nil, err
 		}
 
@@ -45,8 +48,8 @@ func GetTeaOwnersFromDatabase(tea *models.Tea) ([]models.Owner, error) {
 }
 
 // GetAllTeaOwnersFromDatabase gets all owners for all teas.
-func GetAllTeaOwnersFromDatabase() ([]models.TeaWithOwners, error) {
-	teaRows, err := DB.Query("SELECT tea.id, tea.name, tea.teaType, types.name FROM tea INNER JOIN types on types.id = tea.teaType;")
+func (db *Database) GetAllTeaOwnersFromDatabase() ([]models.TeaWithOwners, error) {
+	teaRows, err := db.DB.Query("SELECT tea.id, tea.name, tea.teaType, types.name FROM tea INNER JOIN types on types.id = tea.teaType;")
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +59,7 @@ func GetAllTeaOwnersFromDatabase() ([]models.TeaWithOwners, error) {
 	for teaRows.Next() {
 		tea := new(models.Tea)
 
-		err := teaRows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
-		if err != nil {
+		if err := teaRows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name); err != nil {
 			return nil, err
 		}
 
@@ -66,7 +68,7 @@ func GetAllTeaOwnersFromDatabase() ([]models.TeaWithOwners, error) {
 
 	teasWithOwners := make([]models.TeaWithOwners, 0)
 	for _, tea := range teas {
-		owners, err := GetTeaOwnersFromDatabase(&tea)
+		owners, err := db.GetTeaOwnersFromDatabase(&tea)
 		if err != nil {
 			return nil, err
 		}
@@ -78,10 +80,10 @@ func GetAllTeaOwnersFromDatabase() ([]models.TeaWithOwners, error) {
 }
 
 // CreateTeaOwnerInDatabase adds an owner to a tea in the database.
-func CreateTeaOwnerInDatabase(teaID int, owner *models.Owner) (models.Tea, error) {
+func (db *Database) CreateTeaOwnerInDatabase(teaID int, owner *models.Owner) (models.Tea, error) {
 	tea := new(models.Tea)
 
-	_, err := DB.Exec("INSERT INTO teaOwners VALUES ($1, $2);", teaID, owner.ID)
+	_, err := db.DB.Exec("INSERT INTO teaOwners VALUES ($1, $2);", teaID, owner.ID)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return *tea, errors.New("This relationship already exists")
@@ -92,9 +94,8 @@ func CreateTeaOwnerInDatabase(teaID int, owner *models.Owner) (models.Tea, error
 		return *tea, err
 	}
 
-	row := DB.QueryRow("SELECT tea.id, tea.name, types.id, types.name FROM tea INNER JOIN types ON tea.teaType = types.id WHERE tea.id = $1;", teaID)
-	err = row.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
-	if err != nil {
+	row := db.DB.QueryRow("SELECT tea.id, tea.name, types.id, types.name FROM tea INNER JOIN types ON tea.teaType = types.id WHERE tea.id = $1;", teaID)
+	if err = row.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name); err != nil {
 		return *tea, errors.New("Tea ID not found after insert")
 	}
 
@@ -102,7 +103,7 @@ func CreateTeaOwnerInDatabase(teaID int, owner *models.Owner) (models.Tea, error
 }
 
 // DeleteTeaOwnerFromDatabase deletes an owner of a tea from the database.
-func DeleteTeaOwnerFromDatabase(tea *models.Tea, owner *models.Owner) error {
-	_, err := DB.Exec("DELETE FROM teaOwners WHERE teaID = $1 AND ownerID = $2;", tea.ID, owner.ID)
+func (db *Database) DeleteTeaOwnerFromDatabase(tea *models.Tea, owner *models.Owner) error {
+	_, err := db.DB.Exec("DELETE FROM teaOwners WHERE teaID = $1 AND ownerID = $2;", tea.ID, owner.ID)
 	return err
 }

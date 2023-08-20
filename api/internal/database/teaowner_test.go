@@ -16,9 +16,9 @@ func TestCreateTeaOwnersTable(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	mock.ExpectExec(createTeaOwnersString).WillReturnResult(sqlmock.NewResult(0, 0))
 
@@ -35,9 +35,9 @@ func TestGetTeaOwnerFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	expectedTeaID := 1
 	tea := models.Tea{ID: expectedTeaID}
@@ -76,9 +76,9 @@ func TestGetNonExistentTeaOwnerFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	expectedTeaID := 1
 	tea := models.Tea{ID: expectedTeaID}
@@ -101,9 +101,9 @@ func TestCreateTeaOwnerFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	teaID := 1
 	owner := models.Owner{ID: 1}
@@ -141,9 +141,9 @@ func TestCreateTeaOwnerFromDatabaseRelationshipExists(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	teaID := 1
 	owner := models.Owner{ID: 1}
@@ -165,9 +165,9 @@ func TestCreateTeaOwnerFromDatabaseDoesntExists(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	teaID := 1
 	owner := models.Owner{ID: 1}
@@ -189,9 +189,9 @@ func TestDeleteTeaOwnerFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	tea := models.Tea{ID: 1}
 	owner := models.Owner{ID: 1}
@@ -214,9 +214,9 @@ func TestDeleteNonExistantTeaOwnerFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	tea := models.Tea{ID: 1}
 	owner := models.Owner{ID: 1}

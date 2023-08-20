@@ -1,19 +1,20 @@
 package database
 
 import (
-	"log"
+	"fmt"
 	"strings"
 
 	"github.com/BreD1810/tea-selector/api/internal/models"
 )
 
-func createOwnerTable(owners []string) {
+func (db *Database) createOwnerTable(owners []string) error {
 	creationString := `CREATE TABLE owner (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
 							name TEXT NOT NULL UNIQUE
 					   );`
-	_, err := DB.Exec(creationString)
-	checkError("creating owner table", err)
+	if _, err := db.DB.Exec(creationString); err != nil {
+		return fmt.Errorf("error creating owner table: %w", err)
+	}
 
 	if len(owners) > 0 {
 		var insertString strings.Builder
@@ -28,14 +29,16 @@ func createOwnerTable(owners []string) {
 
 		insertString.WriteString(";")
 
-		_, err = DB.Exec(insertString.String())
-		checkError("inserting owners into the database", err)
+		if _, err := db.DB.Exec(insertString.String()); err != nil {
+			return fmt.Errorf("error inserting owners in to the table: %w", err)
+		}
 	}
+	return nil
 }
 
 // GetAllOwnersFromDatabase gets all the owners from the database.
-func GetAllOwnersFromDatabase() ([]models.Owner, error) {
-	rows, err := DB.Query("SELECT * FROM owner;")
+func (db *Database) GetAllOwnersFromDatabase() ([]models.Owner, error) {
+	rows, err := db.DB.Query("SELECT * FROM owner;")
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +47,7 @@ func GetAllOwnersFromDatabase() ([]models.Owner, error) {
 	owners := make([]models.Owner, 0)
 	for rows.Next() {
 		owner := new(models.Owner)
-		err := rows.Scan(&owner.ID, &owner.Name)
-		if err != nil {
+		if err := rows.Scan(&owner.ID, &owner.Name); err != nil {
 			return nil, err
 		}
 		owners = append(owners, *owner)
@@ -54,25 +56,20 @@ func GetAllOwnersFromDatabase() ([]models.Owner, error) {
 }
 
 // GetOwnerFromDatabase gets an owner from the database by their ID.
-func GetOwnerFromDatabase(owner *models.Owner) error {
-	row := DB.QueryRow("SELECT name FROM owner WHERE id=$1;", owner.ID)
+func (db *Database) GetOwnerFromDatabase(owner *models.Owner) error {
+	row := db.DB.QueryRow("SELECT name FROM owner WHERE id=$1;", owner.ID)
 
 	err := row.Scan(&owner.Name)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // CreateOwnerInDatabase adds a new owner to the database
-func CreateOwnerInDatabase(owner *models.Owner) error {
-	_, err := DB.Exec("INSERT INTO owner (name) VALUES ($1);", owner.Name)
-	if err != nil {
+func (db *Database) CreateOwnerInDatabase(owner *models.Owner) error {
+	if _, err := db.DB.Exec("INSERT INTO owner (name) VALUES ($1);", owner.Name); err != nil {
 		return err
 	}
 
-	rows, err := DB.Query("SELECT ID FROM owner WHERE name = ($1);", owner.Name)
+	rows, err := db.DB.Query("SELECT ID FROM owner WHERE name = ($1);", owner.Name)
 	if err != nil {
 		return err
 	}
@@ -80,35 +77,29 @@ func CreateOwnerInDatabase(owner *models.Owner) error {
 
 	rows.Next()
 	err = rows.Scan(&owner.ID)
-	if err != nil {
-		return err
-	}
-	log.Printf("New ID: %d\n", owner.ID)
-
-	return nil
+	return err
 }
 
 // DeleteOwnerFromDatabase deletes an owner from the database.
-func DeleteOwnerFromDatabase(owner *models.Owner) error {
-	rows, err := DB.Query("SELECT name FROM owner WHERE id=$1;", owner.ID)
+func (db *Database) DeleteOwnerFromDatabase(owner *models.Owner) error {
+	rows, err := db.DB.Query("SELECT name FROM owner WHERE id=$1;", owner.ID)
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 
 	rows.Next()
-	err = rows.Scan(&owner.Name)
-	if err != nil {
+	if err := rows.Scan(&owner.Name); err != nil {
 		return err
 	}
-	rows.Close()
 
-	_, err = DB.Exec("DELETE FROM owner WHERE id = $1;", owner.ID)
+	_, err = db.DB.Exec("DELETE FROM owner WHERE id = $1;", owner.ID)
 	return err
 }
 
 // GetAllOwnersTeasFromDatabase gets all teas for each owner.
-func GetAllOwnersTeasFromDatabase() ([]models.OwnerWithTeas, error) {
-	rows, err := DB.Query("SELECT * FROM owner;")
+func (db *Database) GetAllOwnersTeasFromDatabase() ([]models.OwnerWithTeas, error) {
+	rows, err := db.DB.Query("SELECT * FROM owner;")
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +108,7 @@ func GetAllOwnersTeasFromDatabase() ([]models.OwnerWithTeas, error) {
 	ownersWithTeas := make([]models.OwnerWithTeas, 0)
 	for rows.Next() {
 		ownerWithTeas := new(models.OwnerWithTeas)
-		err := rows.Scan(&ownerWithTeas.Owner.ID, &ownerWithTeas.Owner.Name)
-		if err != nil {
+		if err := rows.Scan(&ownerWithTeas.Owner.ID, &ownerWithTeas.Owner.Name); err != nil {
 			return nil, err
 		}
 
@@ -126,15 +116,14 @@ func GetAllOwnersTeasFromDatabase() ([]models.OwnerWithTeas, error) {
 	}
 
 	for i := range ownersWithTeas {
-		teaRows, err := DB.Query("SELECT tea.id, tea.name, types.id, types.name FROM teaOwners INNER JOIN tea ON teaOwners.teaID = tea.id INNER JOIN types ON types.id = tea.teaType WHERE teaOwners.ownerID = $1;", ownersWithTeas[i].Owner.ID)
+		teaRows, err := db.DB.Query("SELECT tea.id, tea.name, types.id, types.name FROM teaOwners INNER JOIN tea ON teaOwners.teaID = tea.id INNER JOIN types ON types.id = tea.teaType WHERE teaOwners.ownerID = $1;", ownersWithTeas[i].Owner.ID)
 		if err != nil {
 			return nil, err
 		}
 
 		for teaRows.Next() {
 			tea := new(models.Tea)
-			err := teaRows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name)
-			if err != nil {
+			if err := teaRows.Scan(&tea.ID, &tea.Name, &tea.TeaType.ID, &tea.TeaType.Name); err != nil {
 				return nil, err
 			}
 

@@ -12,13 +12,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// A NewPasswordRequest stores the old and new password for a reset request.
-type NewPasswordRequest struct {
-	OldPassword string `json:"old"`
-	NewPassword string `json:"new"`
+type UserHandler interface {
+	Login(w http.ResponseWriter, r *http.Request)
+	Register(w http.ResponseWriter, r *http.Request)
+	ChangePassword(w http.ResponseWriter, r *http.Request)
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+type handlerOfUser struct {
+	db *database.Database
+}
+
+func NewUserHandler(db *database.Database) UserHandler {
+	return &handlerOfUser{db: db}
+}
+
+func (h *handlerOfUser) Login(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /login"`)
 
 	var userLogin models.UserLogin
@@ -33,7 +41,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	userLogin.Username = strings.ToLower(userLogin.Username)
 
 	// Retrieve from DB
-	storedPassword, err := database.GetPasswordFromDatabase(userLogin.Username)
+	storedPassword, err := h.db.GetPasswordFromDatabase(userLogin.Username)
 	if err != nil {
 		log.Printf("Failed to get password from database for user %q\n", userLogin.Username)
 		respondWithError(w, http.StatusBadRequest, "User doesn't exist")
@@ -60,7 +68,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"token": validToken})
 }
 
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfUser) Register(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /register"`)
 
 	var userLogin models.UserLogin
@@ -83,7 +91,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userLogin.Password = string(hash)
-	if err := database.CreateUserInDatabase(userLogin); err != nil {
+	if err := h.db.CreateUserInDatabase(userLogin); err != nil {
 		log.Printf("Error creating user: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -100,10 +108,15 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"token": validToken})
 }
 
-func ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
+type newPasswordRequest struct {
+	OldPassword string `json:"old"`
+	NewPassword string `json:"new"`
+}
+
+func (h *handlerOfUser) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /changepassword"`)
 
-	var newPasswordBody NewPasswordRequest
+	var newPasswordBody newPasswordRequest
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&newPasswordBody); err != nil {
 		log.Println("Failed to extract old and new password")
@@ -121,7 +134,7 @@ func ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve old password from DB
-	storedPassword, err := database.GetPasswordFromDatabase(username)
+	storedPassword, err := h.db.GetPasswordFromDatabase(username)
 	if err != nil {
 		log.Printf("Failed to get password from database for user %q\n", username)
 		respondWithError(w, http.StatusBadRequest, "User doesn't exist")
@@ -147,7 +160,7 @@ func ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	newPassword := string(hash)
 
-	if err := database.ChangePasswordInDatabase(username, newPassword); err != nil {
+	if err := h.db.ChangePasswordInDatabase(username, newPassword); err != nil {
 		log.Printf("Error changing password: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, "Error changing user password")
 		return

@@ -1,19 +1,20 @@
 package database
 
 import (
-	"log"
+	"fmt"
 	"strings"
 
 	"github.com/BreD1810/tea-selector/api/internal/models"
 )
 
-func createTeaTypeTable(types []string) {
+func (db *Database) createTeaTypeTable(types []string) error {
 	creationString := `CREATE TABLE types (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
 							name TEXT NOT NULL UNIQUE
 					   );`
-	_, err := DB.Exec(creationString)
-	checkError("creating types table", err)
+	if _, err := db.DB.Exec(creationString); err != nil {
+		return fmt.Errorf("error creating types table: %w", err)
+	}
 
 	if len(types) > 0 {
 		var insertString strings.Builder
@@ -28,14 +29,17 @@ func createTeaTypeTable(types []string) {
 
 		insertString.WriteString(";")
 
-		_, err = DB.Exec(insertString.String())
-		checkError("inserting types into the database", err)
+		if _, err := db.DB.Exec(insertString.String()); err != nil {
+			return fmt.Errorf("error inserting types into the database", err)
+		}
 	}
+
+	return nil
 }
 
 // GetAllTeaTypesFromDatabase retrieves all the tea types available in the database.
-func GetAllTeaTypesFromDatabase() ([]models.TeaType, error) {
-	rows, err := DB.Query("SELECT * FROM types;")
+func (db *Database) GetAllTeaTypesFromDatabase() ([]models.TeaType, error) {
+	rows, err := db.DB.Query("SELECT * FROM types;")
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +48,7 @@ func GetAllTeaTypesFromDatabase() ([]models.TeaType, error) {
 	teaTypes := make([]models.TeaType, 0)
 	for rows.Next() {
 		teaType := new(models.TeaType)
-		err := rows.Scan(&teaType.ID, &teaType.Name)
-		if err != nil {
+		if err := rows.Scan(&teaType.ID, &teaType.Name); err != nil {
 			return nil, err
 		}
 		teaTypes = append(teaTypes, *teaType)
@@ -54,20 +57,15 @@ func GetAllTeaTypesFromDatabase() ([]models.TeaType, error) {
 }
 
 // GetTeaTypeFromDatabase retrieves a tea type from the database.
-func GetTeaTypeFromDatabase(teaType *models.TeaType) error {
-	row := DB.QueryRow("SELECT name FROM types WHERE id=$1;", teaType.ID)
+func (db *Database) GetTeaTypeFromDatabase(teaType *models.TeaType) error {
+	row := db.DB.QueryRow("SELECT name FROM types WHERE id=$1;", teaType.ID)
 
-	err := row.Scan(&teaType.Name)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return row.Scan(&teaType.Name)
 }
 
 // GetAllTypesTeasFromDatabase gets all teas by types.
-func GetAllTypesTeasFromDatabase() ([]models.TypeWithTeas, error) {
-	rows, err := DB.Query("SELECT * FROM types;")
+func (db *Database) GetAllTypesTeasFromDatabase() ([]models.TypeWithTeas, error) {
+	rows, err := db.DB.Query("SELECT * FROM types;")
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +74,7 @@ func GetAllTypesTeasFromDatabase() ([]models.TypeWithTeas, error) {
 	typesWithTeas := make([]models.TypeWithTeas, 0)
 	for rows.Next() {
 		typeWithTeas := new(models.TypeWithTeas)
-		err := rows.Scan(&typeWithTeas.Type.ID, &typeWithTeas.Type.Name)
-		if err != nil {
+		if err := rows.Scan(&typeWithTeas.Type.ID, &typeWithTeas.Type.Name); err != nil {
 			return nil, err
 		}
 
@@ -85,15 +82,14 @@ func GetAllTypesTeasFromDatabase() ([]models.TypeWithTeas, error) {
 	}
 
 	for i := range typesWithTeas {
-		teaRows, err := DB.Query("SELECT tea.id, tea.name FROM tea WHERE tea.teaType = $1;", typesWithTeas[i].Type.ID)
+		teaRows, err := db.DB.Query("SELECT tea.id, tea.name FROM tea WHERE tea.teaType = $1;", typesWithTeas[i].Type.ID)
 		if err != nil {
 			return nil, err
 		}
 
 		for teaRows.Next() {
 			tea := new(models.Tea)
-			err := teaRows.Scan(&tea.ID, &tea.Name)
-			if err != nil {
+			if err := teaRows.Scan(&tea.ID, &tea.Name); err != nil {
 				return nil, err
 			}
 			tea.TeaType.ID = typesWithTeas[i].Type.ID
@@ -107,42 +103,34 @@ func GetAllTypesTeasFromDatabase() ([]models.TypeWithTeas, error) {
 }
 
 // CreateTeaTypeInDatabase adds a new tea type to the database
-func CreateTeaTypeInDatabase(teaType *models.TeaType) error {
-	_, err := DB.Exec("INSERT INTO types (name) VALUES ($1);", teaType.Name)
-	if err != nil {
+func (db *Database) CreateTeaTypeInDatabase(teaType *models.TeaType) error {
+	if _, err := db.DB.Exec("INSERT INTO types (name) VALUES ($1);", teaType.Name); err != nil {
 		return err
 	}
 
-	rows, err := DB.Query("SELECT ID FROM types WHERE name = ($1);", teaType.Name)
+	rows, err := db.DB.Query("SELECT ID FROM types WHERE name = ($1);", teaType.Name)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
 	rows.Next()
-	err = rows.Scan(&teaType.ID)
-	if err != nil {
-		return err
-	}
-	log.Printf("New ID: %d\n", teaType.ID)
-
-	return nil
+	return rows.Scan(&teaType.ID)
 }
 
 // DeleteTeaTypeInDatabase deletes a tea type from the database.
-func DeleteTeaTypeInDatabase(teaType *models.TeaType) error {
-	rows, err := DB.Query("SELECT name FROM types WHERE id=$1;", teaType.ID)
+func (db *Database) DeleteTeaTypeInDatabase(teaType *models.TeaType) error {
+	rows, err := db.DB.Query("SELECT name FROM types WHERE id=$1;", teaType.ID)
 	if err != nil {
 		return err
 	}
 
 	rows.Next()
-	err = rows.Scan(&teaType.Name)
-	if err != nil {
+	if err = rows.Scan(&teaType.Name); err != nil {
 		return err
 	}
 	rows.Close()
 
-	_, err = DB.Exec("DELETE FROM types WHERE id = $1;", teaType.ID)
+	_, err = db.DB.Exec("DELETE FROM types WHERE id = $1;", teaType.ID)
 	return err
 }

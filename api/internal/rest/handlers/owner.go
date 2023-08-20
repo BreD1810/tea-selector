@@ -12,13 +12,26 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// GetAllOwnersFunc points to a function to get all owners in the database. Useful for mocking.
-var GetAllOwnersFunc = database.GetAllOwnersFromDatabase
+type OwnerHandler interface {
+	GetAllOwners(w http.ResponseWriter, r *http.Request)
+	GetOwner(w http.ResponseWriter, r *http.Request)
+	GetAllOwnersTeas(w http.ResponseWriter, r *http.Request)
+	CreateOwner(w http.ResponseWriter, r *http.Request)
+	DeleteOwner(w http.ResponseWriter, r *http.Request)
+}
 
-func GetAllOwnersHandler(w http.ResponseWriter, r *http.Request) {
+type handlerOfOwner struct {
+	db *database.Database
+}
+
+func NewOwnerHandler(db *database.Database) OwnerHandler {
+	return &handlerOfOwner{db: db}
+}
+
+func (h *handlerOfOwner) GetAllOwners(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "GET /owners"`)
 
-	owners, err := GetAllOwnersFunc()
+	owners, err := h.db.GetAllOwnersFromDatabase()
 	if err != nil {
 		log.Printf("Error retrieving all owners: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -28,10 +41,7 @@ func GetAllOwnersHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, owners)
 }
 
-// GetOwnerFunc points to a function to get information about an owner from the database. Useful for mocking
-var GetOwnerFunc = database.GetOwnerFromDatabase
-
-func GetOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfOwner) GetOwner(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -43,7 +53,7 @@ func GetOwnerHandler(w http.ResponseWriter, r *http.Request) {
 
 	owner := models.Owner{ID: id}
 
-	if err := GetOwnerFunc(&owner); err != nil {
+	if err := h.db.GetOwnerFromDatabase(&owner); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("Failed to get owner as ID didn't exist. ID: %d\n", id)
 			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")
@@ -58,13 +68,10 @@ func GetOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, owner)
 }
 
-// GetAllOwnersTeasFunc gets a list of owners, and their teas. Useful for mocking
-var GetAllOwnersTeasFunc = database.GetAllOwnersTeasFromDatabase
-
-func GetAllOwnersTeasHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfOwner) GetAllOwnersTeas(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Receieved request "GET /owners/teas"`)
 
-	ownersWithTeas, err := GetAllOwnersTeasFunc()
+	ownersWithTeas, err := h.db.GetAllOwnersTeasFromDatabase()
 	if err != nil {
 		log.Printf("Error retrieving all teas for all owners: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -74,10 +81,7 @@ func GetAllOwnersTeasHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, ownersWithTeas)
 }
 
-// CreateOwnerFunc points to a function that creates an owner in the database. Useful for mocking.
-var CreateOwnerFunc = database.CreateOwnerInDatabase
-
-func CreateOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfOwner) CreateOwner(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /owner"`)
 
 	var owner models.Owner
@@ -89,7 +93,7 @@ func CreateOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if err := CreateOwnerFunc(&owner); err != nil {
+	if err := h.db.CreateOwnerInDatabase(&owner); err != nil {
 		log.Printf("Error creating owner: %s\n\t Error: %s\n", owner.Name, err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -99,10 +103,7 @@ func CreateOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, owner)
 }
 
-// DeleteOwnerFunc points to a function to delete an owner from the database. Useful for mocking.
-var DeleteOwnerFunc = database.DeleteOwnerFromDatabase
-
-func DeleteOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfOwner) DeleteOwner(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -114,7 +115,7 @@ func DeleteOwnerHandler(w http.ResponseWriter, r *http.Request) {
 
 	owner := models.Owner{ID: id}
 
-	if err := DeleteOwnerFunc(&owner); err != nil {
+	if err := h.db.DeleteOwnerFromDatabase(&owner); err != nil {
 		if err.Error() == "sql: Rows are closed" {
 			log.Printf("Failed to delete owner as ID didn't exist. ID: %d\n", id)
 			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")

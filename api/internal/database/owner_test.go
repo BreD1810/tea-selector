@@ -16,9 +16,9 @@ func TestCreateOwnerTable(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	mock.ExpectExec(createOwnerString).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectExec("INSERT INTO owner \\(name\\) VALUES \\('" + owners[0] + "'\\), \\('" + owners[1] + "'\\);").WillReturnResult(sqlmock.NewResult(2, 2))
@@ -38,9 +38,9 @@ func TestCreateEmptyOwnerTable(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	mock.ExpectExec(createOwnerString).WillReturnResult(sqlmock.NewResult(0, 0))
 
@@ -57,9 +57,9 @@ func TestGetAllOwnersFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	rows := mock.NewRows([]string{"id", "name"})
 	rows.AddRow("1", "John")
@@ -91,9 +91,9 @@ func TestGetOwnerFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	expected := "John"
 	rows := mock.NewRows([]string{"name"})
@@ -121,9 +121,9 @@ func TestGetNonExistentOwnerFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	expected := ""
 	rows := mock.NewRows([]string{"name"})
@@ -151,9 +151,9 @@ func TestCreateOwnerInDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	ownerName := "John"
 	rows := mock.NewRows([]string{"id"})
@@ -184,9 +184,9 @@ func TestDeleteOwnerFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	ownerName := "John"
 	ownerID := 1
@@ -219,9 +219,9 @@ func TestDeleteNonExistantOwnerFromDatabase(t *testing.T) {
 		t.Fatalf("Error occurred setting up mock database: %v\n\n", err)
 	}
 	defer db.Close()
-	oldDB := DB
-	defer func() { DB = oldDB }()
-	DB = db
+	oldDB := Database
+	defer func() { Database = oldDB }()
+	Database = db
 
 	// teaName := "Black Tea"
 	ownerID := 1

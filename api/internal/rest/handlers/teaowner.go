@@ -11,10 +11,22 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// GetTeaOwnersFunc points to a function to get owners of a tea from the database. Useful for mocking.
-var GetTeaOwnersFunc = database.GetTeaOwnersFromDatabase
+type TeaOwnerHandler interface {
+	GetAllTeaOwners(w http.ResponseWriter, r *http.Request)
+	GetTeaOwners(w http.ResponseWriter, r *http.Request)
+	CreateTeaOwner(w http.ResponseWriter, r *http.Request)
+	DeleteTeaOwner(w http.ResponseWriter, r *http.Request)
+}
 
-func GetTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
+type handlerOfTeaOwner struct {
+	db *database.Database
+}
+
+func NewTeaOwnerHandler(db *database.Database) TeaOwnerHandler {
+	return &handlerOfTeaOwner{db: db}
+}
+
+func (h *handlerOfTeaOwner) GetTeaOwners(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -26,7 +38,7 @@ func GetTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 
 	tea := models.Tea{ID: id}
 
-	owners, err := GetTeaOwnersFunc(&tea)
+	owners, err := h.db.GetTeaOwnersFromDatabase(&tea)
 	if err != nil {
 		if err.Error() == "sql: Rows are closed" {
 			log.Printf("Failed to get tea owners as tea ID didn't exist. ID: %d\n", id)
@@ -42,13 +54,10 @@ func GetTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, owners)
 }
 
-// GetAllTeaOwnersFunc points to a function to get a list of teas and their owners. Useful for mocking.
-var GetAllTeaOwnersFunc = database.GetAllTeaOwnersFromDatabase
-
-func GetAllTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfTeaOwner) GetAllTeaOwners(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "GET /tea/owners"`)
 
-	teasWithOwners, err := GetAllTeaOwnersFunc()
+	teasWithOwners, err := h.db.GetAllTeaOwnersFromDatabase()
 	if err != nil {
 		log.Printf("Error retrieving all teas with owners: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -58,10 +67,7 @@ func GetAllTeaOwnersHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, teasWithOwners)
 }
 
-// CreateTeaOwnerFunc points to a function to add an owner to a tea in the database. Useful for mocking.
-var CreateTeaOwnerFunc = database.CreateTeaOwnerInDatabase
-
-func CreateTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfTeaOwner) CreateTeaOwner(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -80,7 +86,7 @@ func CreateTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	tea, err := CreateTeaOwnerFunc(id, &owner)
+	tea, err := h.db.CreateTeaOwnerInDatabase(id, &owner)
 	if err != nil {
 		log.Printf("Error creating owner for tea with ID: %d\n\t Error: %s\n", id, err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -91,10 +97,7 @@ func CreateTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, tea)
 }
 
-// DeleteTeaOwnerFunc points to a function to delete an owner from a tea in the database. Useful for mocking.
-var DeleteTeaOwnerFunc = database.DeleteTeaOwnerFromDatabase
-
-func DeleteTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfTeaOwner) DeleteTeaOwner(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	teaID, err := strconv.Atoi(vars["teaID"])
 	if err != nil {
@@ -113,7 +116,7 @@ func DeleteTeaOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	tea := models.Tea{ID: teaID}
 	owner := models.Owner{ID: ownerID}
 
-	if err := DeleteTeaOwnerFunc(&tea, &owner); err != nil {
+	if err := h.db.DeleteTeaOwnerFromDatabase(&tea, &owner); err != nil {
 		if err.Error() == "sql: Rows are closed" {
 			log.Println("Failed to delete tea owner as relationship doesn't exist")
 			respondWithError(w, http.StatusInternalServerError, "Relationship does not exist in database")

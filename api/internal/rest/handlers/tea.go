@@ -12,13 +12,25 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// GetAllTeasFunc points to a function to get all teas in the database. Useful for mocking.
-var GetAllTeasFunc = database.GetAllTeasFromDatabase
+type TeaHandler interface {
+	GetAllTeas(w http.ResponseWriter, r *http.Request)
+	GetTea(w http.ResponseWriter, r *http.Request)
+	CreateTea(w http.ResponseWriter, r *http.Request)
+	DeleteTea(w http.ResponseWriter, r *http.Request)
+}
 
-func GetAllTeasHandler(w http.ResponseWriter, r *http.Request) {
+type handlerOfTea struct {
+	teaStore database.TeaStorer
+}
+
+func NewTeaHandler(ts database.TeaStorer) TeaHandler {
+	return &handlerOfTea{teaStore: ts}
+}
+
+func (h *handlerOfTea) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "GET /teas"`)
 
-	teas, err := GetAllTeasFunc()
+	teas, err := h.teaStore.GetAllTeasFromDatabase()
 	if err != nil {
 		log.Printf("Error retrieving all teas: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -28,10 +40,7 @@ func GetAllTeasHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, teas)
 }
 
-// GetTeaFunc points to a function to get information about a tea from the database. Useful for mocking.
-var GetTeaFunc = database.GetTeaFromDatabase
-
-func GetTeaHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfTea) GetTea(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -43,7 +52,7 @@ func GetTeaHandler(w http.ResponseWriter, r *http.Request) {
 
 	tea := models.Tea{ID: id}
 
-	if err := GetTeaFunc(&tea); err != nil {
+	if err := h.teaStore.GetTeaFromDatabase(&tea); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("Failed to get tea as ID didn't exist. ID: %d\n", id)
 			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")
@@ -58,10 +67,7 @@ func GetTeaHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, tea)
 }
 
-// CreateTeaFunc points to a function to create a tea in the database. Useful for mocking.
-var CreateTeaFunc = database.CreateTeaInDatabase
-
-func CreateTeaHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfTea) CreateTea(w http.ResponseWriter, r *http.Request) {
 	log.Println(`Received request "POST /tea"`)
 
 	var tea models.Tea
@@ -73,7 +79,7 @@ func CreateTeaHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if err := CreateTeaFunc(&tea); err != nil {
+	if err := h.teaStore.CreateTeaInDatabase(&tea); err != nil {
 		log.Printf("Error creating tea: %s\n\t Error: %s\n", tea.Name, err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -83,10 +89,7 @@ func CreateTeaHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, tea)
 }
 
-// DeleteTeaFunc points to a function to delete a tea from the database. Useful for mocking.
-var DeleteTeaFunc = database.DeleteTeaFromDatabase
-
-func DeleteTeaHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handlerOfTea) DeleteTea(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -98,7 +101,7 @@ func DeleteTeaHandler(w http.ResponseWriter, r *http.Request) {
 
 	tea := models.Tea{ID: id}
 
-	if err := DeleteTeaFunc(&tea); err != nil {
+	if err := h.teaStore.DeleteTeaFromDatabase(&tea); err != nil {
 		if err.Error() == "sql: Rows are closed" {
 			log.Printf("Failed to delete tea as ID didn't exist. ID: %d\n", id)
 			respondWithError(w, http.StatusInternalServerError, "ID does not exist in database")

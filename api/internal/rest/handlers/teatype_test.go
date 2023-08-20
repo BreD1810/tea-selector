@@ -45,31 +45,61 @@ func allTeaTypeResponseMock() ([]models.TeaType, error) {
 }
 
 func TestGetTeaTypeHandler(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "/type", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Run("success", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/type", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	vars := map[string]string{"id": "1"}
-	req = mux.SetURLVars(req, vars)
+		vars := map[string]string{"id": "1"}
+		req = mux.SetURLVars(req, vars)
 
-	// Mock the response from the database
-	oldFunc := GetTeaTypeFunc
-	defer func() { GetTeaTypeFunc = oldFunc }()
-	GetTeaTypeFunc = getTeaTypeResponseMock
+		// Mock the response from the database
+		oldFunc := GetTeaTypeFunc
+		defer func() { GetTeaTypeFunc = oldFunc }()
+		GetTeaTypeFunc = getTeaTypeResponseMock
 
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(GetTeaTypeHandler)
-	handler.ServeHTTP(rr, req)
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(GetTeaTypeHandler)
+		handler.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("GET /type/1 returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
-	}
+		if status := rr.Code; status != http.StatusOK {
+			t.Errorf("GET /type/1 returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+		}
 
-	expected := `{"id":1,"name":"Black Tea"}`
-	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("GET /type/1 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
-	}
+		expected := `{"id":1,"name":"Black Tea"}`
+		if actual := rr.Body.String(); actual != expected {
+			t.Errorf("GET /type/1 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/type", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		vars := map[string]string{"id": "10"}
+		req = mux.SetURLVars(req, vars)
+
+		// Mock the response from the database
+		oldFunc := GetTeaTypeFunc
+		defer func() { GetTeaTypeFunc = oldFunc }()
+		GetTeaTypeFunc = getTeaTypeErrorResponseMock
+
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(GetTeaTypeHandler)
+		handler.ServeHTTP(rr, req)
+
+		if status := rr.Code; status != http.StatusInternalServerError {
+			t.Errorf("GET /type/10 returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+		}
+
+		expected := `{"error":"ID does not exist in database"}`
+		if actual := rr.Body.String(); actual != expected {
+			t.Errorf("GET /type/10 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		}
+	})
 }
 
 func getTeaTypeResponseMock(teaType *models.TeaType) error {
@@ -77,61 +107,60 @@ func getTeaTypeResponseMock(teaType *models.TeaType) error {
 	return nil
 }
 
-func TestGetTeaTypeHandlerError(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "/type", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	vars := map[string]string{"id": "10"}
-	req = mux.SetURLVars(req, vars)
-
-	// Mock the response from the database
-	oldFunc := GetTeaTypeFunc
-	defer func() { GetTeaTypeFunc = oldFunc }()
-	GetTeaTypeFunc = getTeaTypeErrorResponseMock
-
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(GetTeaTypeHandler)
-	handler.ServeHTTP(rr, req)
-
-	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("GET /type/10 returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
-	}
-
-	expected := `{"error":"ID does not exist in database"}`
-	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("GET /type/10 returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
-	}
-}
-
 func getTeaTypeErrorResponseMock(teaType *models.TeaType) error {
 	return sql.ErrNoRows
 }
 
 func TestCreateTeaTypeHandler(t *testing.T) {
-	req, err := http.NewRequest(http.MethodPost, "/type", strings.NewReader(`{"name": "Black Tea"}`))
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Run("success", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodPost, "/type", strings.NewReader(`{"name": "Black Tea"}`))
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	// Mock the response from the database
-	oldFunc := CreateTeaTypeFunc
-	defer func() { CreateTeaTypeFunc = oldFunc }()
-	CreateTeaTypeFunc = createTeaTypeResponseMock
+		// Mock the response from the database
+		oldFunc := CreateTeaTypeFunc
+		defer func() { CreateTeaTypeFunc = oldFunc }()
+		CreateTeaTypeFunc = createTeaTypeResponseMock
 
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(CreateTeaTypeHandler)
-	handler.ServeHTTP(rr, req)
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(CreateTeaTypeHandler)
+		handler.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusCreated {
-		t.Errorf("POST /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusCreated)
-	}
+		if status := rr.Code; status != http.StatusCreated {
+			t.Errorf("POST /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusCreated)
+		}
 
-	expected := `{"id":10,"name":"Black Tea"}`
-	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("POST /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
-	}
+		expected := `{"id":10,"name":"Black Tea"}`
+		if actual := rr.Body.String(); actual != expected {
+			t.Errorf("POST /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodPost, "/type", strings.NewReader(`{"name": "Black Tea"}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Mock the response from the database
+		oldFunc := CreateTeaTypeFunc
+		defer func() { CreateTeaTypeFunc = oldFunc }()
+		CreateTeaTypeFunc = createTeaTypeResponseErrorMock
+
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(CreateTeaTypeHandler)
+		handler.ServeHTTP(rr, req)
+
+		if status := rr.Code; status != http.StatusInternalServerError {
+			t.Errorf("POST /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+		}
+
+		expected := `{"error":"Error"}`
+		if actual := rr.Body.String(); actual != expected {
+			t.Errorf("POST /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		}
+	})
 }
 
 func createTeaTypeResponseMock(teaType *models.TeaType) error {
@@ -139,94 +168,71 @@ func createTeaTypeResponseMock(teaType *models.TeaType) error {
 	return nil
 }
 
-func TestErrorCreateTeaTypeHandler(t *testing.T) {
-	req, err := http.NewRequest(http.MethodPost, "/type", strings.NewReader(`{"name": "Black Tea"}`))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Mock the response from the database
-	oldFunc := CreateTeaTypeFunc
-	defer func() { CreateTeaTypeFunc = oldFunc }()
-	CreateTeaTypeFunc = createTeaTypeResponseErrorMock
-
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(CreateTeaTypeHandler)
-	handler.ServeHTTP(rr, req)
-
-	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("POST /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
-	}
-
-	expected := `{"error":"Error"}`
-	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("POST /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
-	}
-}
-
 func createTeaTypeResponseErrorMock(teaType *models.TeaType) error {
 	return errors.New("Error")
 }
 
 func TestDeleteTeaTypeHandler(t *testing.T) {
-	req, err := http.NewRequest(http.MethodDelete, "/type", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Run("success", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodDelete, "/type", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	vars := map[string]string{"id": "1"}
-	req = mux.SetURLVars(req, vars)
+		vars := map[string]string{"id": "1"}
+		req = mux.SetURLVars(req, vars)
 
-	// Mock the response from the database
-	oldFunc := DeleteTeaTypeFunc
-	defer func() { DeleteTeaTypeFunc = oldFunc }()
-	DeleteTeaTypeFunc = deleteTeaTypeResponseMock
+		// Mock the response from the database
+		oldFunc := DeleteTeaTypeFunc
+		defer func() { DeleteTeaTypeFunc = oldFunc }()
+		DeleteTeaTypeFunc = deleteTeaTypeResponseMock
 
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(DeleteTeaTypeHandler)
-	handler.ServeHTTP(rr, req)
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(DeleteTeaTypeHandler)
+		handler.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("DELETE /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
-	}
+		if status := rr.Code; status != http.StatusOK {
+			t.Errorf("DELETE /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusOK)
+		}
 
-	expected := `{"name":"Black Tea","result":"success"}`
-	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("DELETE /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
-	}
+		expected := `{"name":"Black Tea","result":"success"}`
+		if actual := rr.Body.String(); actual != expected {
+			t.Errorf("DELETE /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodDelete, "/type", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		vars := map[string]string{"id": "1"}
+		req = mux.SetURLVars(req, vars)
+
+		// Mock the response from the database
+		oldFunc := DeleteTeaTypeFunc
+		defer func() { DeleteTeaTypeFunc = oldFunc }()
+		DeleteTeaTypeFunc = deleteTeaTypeResponseErrorMock
+
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(DeleteTeaTypeHandler)
+		handler.ServeHTTP(rr, req)
+
+		if status := rr.Code; status != http.StatusInternalServerError {
+			t.Errorf("DELETE /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
+		}
+
+		expected := `{"error":"ID does not exist in database"}`
+		if actual := rr.Body.String(); actual != expected {
+			t.Errorf("DELETE /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
+		}
+	})
 }
 
 func deleteTeaTypeResponseMock(teaType *models.TeaType) error {
 	teaType.Name = "Black Tea"
 	return nil
-}
-
-func TestDeleteTeaTypeErrorHandler(t *testing.T) {
-	req, err := http.NewRequest(http.MethodDelete, "/type", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	vars := map[string]string{"id": "1"}
-	req = mux.SetURLVars(req, vars)
-
-	// Mock the response from the database
-	oldFunc := DeleteTeaTypeFunc
-	defer func() { DeleteTeaTypeFunc = oldFunc }()
-	DeleteTeaTypeFunc = deleteTeaTypeResponseErrorMock
-
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(DeleteTeaTypeHandler)
-	handler.ServeHTTP(rr, req)
-
-	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("DELETE /type returned wrong status code:\n got: %v\n want: %v", status, http.StatusInternalServerError)
-	}
-
-	expected := `{"error":"ID does not exist in database"}`
-	if actual := rr.Body.String(); actual != expected {
-		t.Errorf("DELETE /type returned unexpected body:\n got: %v\n wanted: %v", actual, expected)
-	}
 }
 
 func deleteTeaTypeResponseErrorMock(teaType *models.TeaType) error {
